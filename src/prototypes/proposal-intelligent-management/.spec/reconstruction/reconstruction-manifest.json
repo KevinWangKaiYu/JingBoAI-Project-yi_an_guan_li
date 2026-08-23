@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "path": "C:\\Users\\18366\\AppData\\Local\\Temp\\codex-clipboard-b437d213-e6d2-42a2-8990-be338352e233.png",
+    "sha256": "741bd854f5028c608577f21f83717d29d61509c894cc5609f21351e442e8f188",
+    "width": 1735,
+    "height": 775,
+    "viewport": {
+      "width": 1735,
+      "height": 775,
+      "deviceScaleFactor": 1
+    }
+  },
+  "elements": [
+    {
+      "id": "blueprint-canvas",
+      "sourceBBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1735,
+        "height": 775
+      },
+      "targetBBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1735,
+        "height": 775
+      },
+      "representation": "html",
+      "candidates": [],
+      "selectedCandidateId": null,
+      "specElementId": "flow-board",
+      "reactTarget": null
+    },
+    {
+      "id": "grid",
+      "sourceBBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1735,
+        "height": 775
+      },
+      "targetBBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1735,
+        "height": 775
+      },
+      "representation": "html",
+      "candidates": [],
+      "selectedCandidateId": null,
+      "specElementId": "grid-background",
+      "reactTarget": null
+    },
+    {
+      "id": "phase-cards",
+      "sourceBBox": {
+        "x": 180,
+        "y": 145,
+        "width": 1519,
+        "height": 41
+      },
+      "targetBBox": {
+        "x": 180,
+        "y": 145,
+        "width": 1519,
+        "height": 41
+      },
+      "representation": "html",
+      "candidates": [],
+      "selectedCandidateId": null,
+      "specElementId": "top-phase-chain",
+      "reactTarget": null
+    },
+    {
+      "id": "phase-mapping",
+      "sourceBBox": {
+        "x": 180,
+        "y": 186,
+        "width": 1483,
+        "height": 115
+      },
+      "targetBBox": {
+        "x": 180,
+        "y": 186,
+        "width": 1483,
+        "height": 115
+      },
+      "representation": "html",
+      "candidates": [],
+      "selectedCandidateId": null,
+      "specElementId": "stage-links",
+      "reactTarget": null
+    },
+    {
+      "id": "lanes",
+      "sourceBBox": {
+        "x": 97,
+        "y": 332,
+        "width": 1501,
+        "height": 379
+      },
+      "targetBBox": {
+        "x": 97,
+        "y": 332,
+        "width": 1501,
+        "height": 379
+      },
+      "representation": "html",
+      "candidates": [],
+      "selectedCandidateId": null,
+      "specElementId": "process-lanes",
+      "reactTarget": null
+    },
+    {
+      "id": "task-nodes",
+      "sourceBBox": {
+        "x": 114,
+        "y": 351,
+        "width": 1473,
+        "height": 206
+      },
+      "targetBBox": {
+        "x": 114,
+        "y": 351,
+        "width": 1473,
+        "height": 206
+      },
+      "representation": "html",
+      "candidates": [],
+      "selectedCandidateId": null,
+      "specElementId": "task-node-network",
+      "reactTarget": null
+    },
+    {
+      "id": "zoom-tools",
+      "sourceBBox": {
+        "x": 1682,
+        "y": 252,
+        "width": 33,
+        "height": 93
+      },
+      "targetBBox": {
+        "x": 1682,
+        "y": 252,
+        "width": 33,
+        "height": 93
+      },
+      "representation": "html",
+      "candidates": [],
+      "selectedCandidateId": null,
+      "specElementId": "zoom-tools",
+      "reactTarget": null
+    }
+  ]
+}

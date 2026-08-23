@@ -1,0 +1,2 @@
+/* The fixed H5 layers own their scroll gesture and do not pass it to the scene library. */
+.h5-form-overlay{overflow:hidden;overscroll-behavior:contain}.h5-form-drawer{overscroll-behavior:contain;touch-action:pan-y}.h5-template-editor{overscroll-behavior:contain}.h5-template-paper{overscroll-behavior:contain;touch-action:pan-y}
