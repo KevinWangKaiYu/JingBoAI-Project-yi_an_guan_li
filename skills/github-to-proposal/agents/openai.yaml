@@ -1,0 +1,3 @@
+interface:
+  display_name: "GitHub to Proposal"
+  short_description: "从 GitHub 恢复议案原型"

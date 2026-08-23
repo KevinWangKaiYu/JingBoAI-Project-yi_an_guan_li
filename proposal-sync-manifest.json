@@ -1,7 +1,12 @@
 {
   "sharedDependency": "src/common/useHashPage.ts",
-  "uploadedAt": "2026-08-23T13:03:36.6455502Z",
-  "source": "src/prototypes/proposal-intelligent-management",
-  "schema": 1,
-  "project": "proposal-intelligent-management"
+  "uploadedAt": "2026-08-23T13:06:13.2502969Z",
+  "download": "downloads/proposal-github-sync-skills.zip",
+  "project": "proposal-intelligent-management",
+  "skills": [
+    "skills/proposal-to-github",
+    "skills/github-to-proposal"
+  ],
+  "schema": 2,
+  "source": "src/prototypes/proposal-intelligent-management"
 }

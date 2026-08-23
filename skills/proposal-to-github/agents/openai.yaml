@@ -1,0 +1,3 @@
+interface:
+  display_name: "Proposal to GitHub"
+  short_description: "备份议案原型到固定 GitHub 仓库"
