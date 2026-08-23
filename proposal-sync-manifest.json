@@ -1,7 +1,7 @@
 {
-  "project": "proposal-intelligent-management",
   "sharedDependency": "src/common/useHashPage.ts",
-  "schema": 1,
+  "uploadedAt": "2026-08-23T13:03:36.6455502Z",
   "source": "src/prototypes/proposal-intelligent-management",
-  "uploadedAt": "2026-08-23T12:53:01.0288426Z"
+  "schema": 1,
+  "project": "proposal-intelligent-management"
 }
