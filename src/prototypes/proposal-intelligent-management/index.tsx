@@ -783,20 +783,10 @@ function AdminProposalTable({
   );
 }
 function Lifecycle({ items, onDetail }: { items: Proposal[]; onDetail: (p: Proposal) => void }) {
-  const [filter, setFilter] = useState("");
-  const cards = [
-    ["待整理", "待整理", "orange"],
-    ["待拆解", "待拆解", "blue"],
-    ["投票中", "投票中", "green"],
-    ["督办中", "督办中", "purple"],
-  ] as const;
-  const displayed = filter ? items.filter((p) => p.lifecycleStatus === filter) : items;
   return <main className="pam-content"><PageTitle eyebrow="战略执行委员会 · 全流程总览" title="议案生命周期" desc="集中查看议案在整理、审核、投票、拆解、督办与归档环节的最新状态。"><button className="plain"><RefreshCw size={14}/>刷新</button></PageTitle>
-    <section className="pam-stats lifecycle-stats">{cards.map(([label, status, tone]) => <button className={filter === status ? `stat-filter active ${tone}` : `stat-filter ${tone}`} onClick={() => setFilter(filter === status ? "" : status)} key={status}><span>{label}</span><b>{items.filter((p) => p.lifecycleStatus === status).length}</b><small>{filter === status ? "再次点击查看全部" : "点击查看对应议案"}</small></button>)}</section>
-    <section className="pam-card"><header><div><h2>{filter ? `${filter}议案` : "全部议案"}</h2><p>{filter ? "再次点击上方卡片可回到默认全部状态。" : "显示当前状态、最近变更时间与完整进度记录。"}</p></div><label className="pam-search">⌕ <input placeholder="搜索议案名称、编号或申请人" /></label></header><AdminProposalTable items={displayed} onDetail={onDetail} statusOf={(p) => p.lifecycleStatus || p.status} empty="当前分类暂无议案" /></section>
+    <section className="pam-card"><header><div><h2>全部议案</h2><p>显示当前状态、最近变更时间与完整进度记录。</p></div><label className="pam-search">⌕ <input placeholder="搜索议案名称、编号或申请人" /></label></header><AdminProposalTable items={items} onDetail={onDetail} statusOf={(p) => p.lifecycleStatus || p.status} empty="暂无议案" /></section>
   </main>;
-}
-const digitalEmployeeStages = [
+}const digitalEmployeeStages = [
   { title: "议案收集与整理", desc: "", x: 150, lane: "收集整理" },
   { title: "议案数据审核", desc: "", x: 460, lane: "数据审核" },
   { title: "审议流程管理", desc: "", x: 770, lane: "审议流程" },
