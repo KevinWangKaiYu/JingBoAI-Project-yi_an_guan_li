@@ -1,12 +1,12 @@
-{
-  "project": "proposal-intelligent-management",
-  "sharedDependency": "src/common/useHashPage.ts",
-  "schema": 2,
-  "uploadedAt": "2026-08-23T13:37:14.3323995Z",
-  "source": "src/prototypes/proposal-intelligent-management",
-  "download": "downloads/proposal-github-sync-skills.zip",
-  "skills": [
-    "skills/proposal-to-github",
-    "skills/github-to-proposal"
-  ]
+﻿{
+    "skills":  [
+                   "skills/proposal-to-github",
+                   "skills/github-to-proposal"
+               ],
+    "uploadedAt":  "2026-08-24T09:54:37.2678585Z",
+    "source":  "src/prototypes/proposal-intelligent-management",
+    "download":  "downloads/proposal-github-sync-skills.zip",
+    "schema":  2,
+    "sharedDependency":  "src/common/useHashPage.ts",
+    "project":  "proposal-intelligent-management"
 }

@@ -787,32 +787,167 @@ function Lifecycle({ items, onDetail }: { items: Proposal[]; onDetail: (p: Propo
     <section className="pam-card"><header><div><h2>全部议案</h2><p>显示当前状态、最近变更时间与完整进度记录。</p></div><label className="pam-search">⌕ <input placeholder="搜索议案名称、编号或申请人" /></label></header><AdminProposalTable items={items} onDetail={onDetail} statusOf={(p) => p.lifecycleStatus || p.status} empty="暂无议案" /></section>
   </main>;
 }const digitalEmployeeStages = [
-  { title: "议案收集与整理", desc: "", x: 150, lane: "收集整理" },
-  { title: "议案数据审核", desc: "", x: 460, lane: "数据审核" },
-  { title: "审议流程管理", desc: "", x: 770, lane: "审议流程" },
-  { title: "决议分发", desc: "", x: 1080, lane: "决议分发" },
-  { title: "执行监督与归档", desc: "", x: 1390, lane: "执行监督与归档" },
+  { title: "议案收集", agentTitle: "议案收集智能体", desc: "", x: 25, agentX: 235, lane: "议案数字员工" },
+  { title: "议案审核", agentTitle: "议案审核智能体", desc: "", x: 470, agentX: 680, lane: "议案数字员工" },
+  { title: "审议", agentTitle: "审议智能体", desc: "", x: 915, agentX: 1125, lane: "议案数字员工" },
+  { title: "决议传递", agentTitle: "决议传递智能体", desc: "", x: 1360, agentX: 1570, lane: "议案数字员工" },
+  { title: "议案执行监督", agentTitle: "议案执行监督智能体", desc: "", x: 1805, agentX: 2015, lane: "议案数字员工" },
 ] as const;
 
 const digitalEmployeeNodes = [
-  { id: "01", title: "议案收集", x: 111, y: 434, tone: "cyan", lane: 0, steps: ["开始", "卓越议案收集", "门户议案收集", "钉钉议案收集", "钉钉修改回传"] },
-  { id: "02", title: "议案类型判断", x: 420, y: 330, tone: "indigo", lane: 1, steps: ["议案类型判定", "修改信息识别与路由"] },
-  { id: "03", title: "修改信息标记", x: 420, y: 420, tone: "indigo", lane: 1, steps: ["修改信息标记"] },
-  { id: "04", title: "基础审核", x: 420, y: 510, tone: "indigo", lane: 1, steps: ["基础性规则匹配与校验", "基础性驳回修改并判断修改处", "发给基础审核负责人判断"] },
-  { id: "05", title: "职能预审", x: 420, y: 600, tone: "indigo", lane: 1, steps: ["职能相关规则匹配与校验", "职能驳回修改并判断修改处", "发给职能预审负责人判断"] },
-  { id: "06", title: "战执委审核", x: 420, y: 690, tone: "indigo", lane: 1, steps: ["战执委相关规则匹配与校验", "战执委驳回修改并判断修改处", "发给战执委负责人判断"] },
-  { id: "07", title: "生成审议材料", x: 730, y: 374, tone: "violet", lane: 2, steps: ["审议负责人填写审议基础信息", "审议材料整理", "审议负责人确认"] },
-  { id: "08", title: "进行审议监控", x: 730, y: 520, tone: "violet", lane: 2, steps: ["审议监控"] },
-  { id: "09", title: "生成审议总结", x: 730, y: 666, tone: "violet", lane: 2, steps: ["生成审议公告", "生成决议文件", "生成指令", "议案负责人确认公告", "审议负责人确认决议文件", "审议负责人确认指令", "结束"] },
-  { id: "10", title: "决议文件接收与审核", x: 1040, y: 414, tone: "amber", lane: 3, steps: ["决议文件接收", "决议文件向上审批"] },
-  { id: "11", title: "决议文件路由通知", x: 1040, y: 574, tone: "amber", lane: 3, steps: ["决议文件横向路由", "决议文件向下路由", "决议文件备案", "通知发起部门并指定负责人"] },
-  { id: "12", title: "执行监听", x: 1350, y: 374, tone: "green", lane: 4, steps: ["执行监听", "执行结果分析"] },
-  { id: "13", title: "执行结果分析确认", x: 1350, y: 520, tone: "green", lane: 4, steps: ["议案负责人确认", "归档负责人确认"] },
-  { id: "14", title: "归档", x: 1350, y: 666, tone: "rose", lane: 4, steps: ["执行归档", "结束"] },
+  { id: "01", title: "卓越议案收集", x: 235, y: 260, tone: "cyan", lane: 0, steps: ["卓越议案收集"] },
+  { id: "02", title: "门户议案收集", x: 235, y: 340, tone: "cyan", lane: 0, steps: ["门户议案收集"] },
+  { id: "03", title: "钉钉议案机器人收集", x: 235, y: 620, tone: "cyan", lane: 0, steps: ["钉钉议案机器人收集"] },
+  { id: "04", title: "议案类型判断", x: 680, y: 220, tone: "indigo", lane: 1, steps: ["议案类型判断"] },
+  { id: "05", title: "修改信息识别", x: 680, y: 300, tone: "indigo", lane: 1, steps: ["修改信息识别"] },
+  { id: "06", title: "基础审核", x: 680, y: 380, tone: "indigo", lane: 1, steps: ["基础审核"] },
+  { id: "07", title: "职能审核", x: 680, y: 610, tone: "indigo", lane: 1, steps: ["职能审核"] },
+  { id: "08", title: "战执委审核", x: 680, y: 690, tone: "indigo", lane: 1, steps: ["战执委审核"] },
+  { id: "12", title: "基础信息收集", x: 1125, y: 260, tone: "violet", lane: 2, steps: ["基础信息收集"] },
+  { id: "13", title: "审议确认与发起", x: 1125, y: 340, tone: "violet", lane: 2, steps: ["审议确认与发起"] },
+  { id: "14", title: "审议监控", x: 1125, y: 420, tone: "violet", lane: 2, steps: ["审议监控"] },
+  { id: "15", title: "生成审议公告", x: 1125, y: 590, tone: "violet", lane: 2, steps: ["生成审议公告"] },
+  { id: "16", title: "生成决议文件", x: 1125, y: 670, tone: "violet", lane: 2, steps: ["生成决议文件"] },
+  { id: "17", title: "生成指令", x: 1125, y: 750, tone: "violet", lane: 2, steps: ["生成指令"] },
+  { id: "18", title: "分发流程判断", x: 1570, y: 220, tone: "amber", lane: 3, steps: ["分发流程判断"] },
+  { id: "19", title: "向上审批", x: 1570, y: 300, tone: "amber", lane: 3, steps: ["向上审批"] },
+  { id: "20", title: "横向备案", x: 1570, y: 610, tone: "amber", lane: 3, steps: ["横向备案"] },
+
+  { id: "22", title: "向下分发", x: 1570, y: 690, tone: "amber", lane: 3, steps: ["向下分发"] },
+  { id: "23", title: "执行监听", x: 2015, y: 300, tone: "green", lane: 4, steps: ["执行监听"] },
+  { id: "24", title: "执行结果分析", x: 2015, y: 380, tone: "green", lane: 4, steps: ["执行结果分析"] },
+  { id: "25", title: "整理归档材料", x: 2015, y: 620, tone: "green", lane: 4, steps: ["整理归档材料"] },
+  { id: "26", title: "执行归档", x: 2015, y: 700, tone: "rose", lane: 4, steps: ["执行归档"] },
 ] as const;
 
-const digitalEmployeeLanes = ["收集整理", "数据审核", "审议流程", "决议分发", "执行监督与归档"] as const;
+const digitalEmployeeLanes = ["议案数字员工", "议案数字员工", "议案数字员工", "议案数字员工", "议案数字员工"] as const;
 type DigitalEmployeeNode = typeof digitalEmployeeNodes[number];
+type DigitalEmployeeSubtask = { title: string; role: "议案数字员工" | "各环节负责人" | "申请人"; detail: string; h5Operation?: string };
+const digitalEmployeeSubtasks: Record<DigitalEmployeeNode["id"], DigitalEmployeeSubtask[]> = {
+  "01": [
+    { title: "调用工具收集议案", role: "议案数字员工", detail: "跟卓越进行接口对接，收集卓越新提交的议案申请。" },
+    { title: "自动编码", role: "议案数字员工", detail: "调用系统的编码接口，对新的议案进行编码。" },
+    { title: "议案存储", role: "议案数字员工", detail: "议案存储在智能体文件系统中。" },
+  ],
+  "02": [
+    { title: "调用工具收集议案", role: "议案数字员工", detail: "跟门户进行接口对接，收集门户新提交的议案申请。" },
+    { title: "自动编码", role: "议案数字员工", detail: "调用系统的编码接口，对新的议案进行编码。" },
+    { title: "议案存储", role: "议案数字员工", detail: "议案存储在智能体文件系统中。" },
+  ],
+  "03": [
+    { title: "议案申请", role: "申请人", detail: "在钉钉的议案机器人发送议案申请，根据定义好的模板，填写议案申请材料。", h5Operation: "application" },
+    { title: "调用工具收集议案", role: "议案数字员工", detail: "跟钉钉议案机器人进行接口对接，收集新提交的议案申请。" },
+    { title: "自动编码", role: "议案数字员工", detail: "调用系统的编码接口，对新的议案进行编码。" },
+    { title: "议案存储", role: "议案数字员工", detail: "议案存储在智能体文件系统中。" },
+  ],  "04": [
+    { title: "议案类型判断", role: "议案数字员工", detail: "判断当前提交的是新议案，还是经过修改后重新提交的议案。" },
+    { title: "议案分发", role: "议案数字员工", detail: "新议案进入基础审核；修改后的议案进入修改信息识别。" },
+  ],  "05": [
+    { title: "申请文件内容比对", role: "议案数字员工", detail: "比对当前提交的申请表与修改前申请表的差异。" },
+    { title: "申请模板内容比对", role: "议案数字员工", detail: "比对当前提交的申请模板与修改前申请模板的差异。" },
+    { title: "附件内容比对", role: "议案数字员工", detail: "比对当前提交的附件文件及内容与修改前版本的差异。" },
+    { title: "修改总结", role: "议案数字员工", detail: "依据 Skill 定义的总结方式和输出格式，生成修改内容说明。" },
+    { title: "议案分发", role: "议案数字员工", detail: "识别议案被驳回时所在的审核流程，并回到对应审核流程继续处理。" },
+  ],  "06": [
+    { title: "基础检查", role: "议案数字员工", detail: "根据基础检查规则，对议案材料进行完整性、规范性与必填项检查。" },
+    { title: "技能调取与检测", role: "议案数字员工", detail: "如配置相关 Skill，则按 Skill 规则进行基础内容检查。" },
+    { title: "生成基础检查审核建议", role: "议案数字员工", detail: "根据检查结果生成可供负责人查看和修改的基础审核建议。" },
+    { title: "基础审核内容推送", role: "议案数字员工", detail: "通过议案机器人将审核建议推送给基础审核负责人。" },
+    { title: "基础审核核验", role: "各环节负责人", detail: "负责人在钉钉内查看并可修改审核意见，选择驳回或通过；通过后自动进入职能审核。", h5Operation: "basic-review" },
+    { title: "整理驳回信息", role: "议案数字员工", detail: "被驳回时，整理原议案文件、审核意见和审核人信息。" },
+    { title: "驳回材料推送", role: "议案数字员工", detail: "将整理后的材料和审核意见发送给申请人进行修改。" },
+    { title: "基础审核驳回修改", role: "申请人", detail: "申请人依据审核意见在钉钉内修改并重新提交；提交后重新进入修改信息识别。", h5Operation: "basic-revision" },
+  ],  "07": [
+    { title: "职能检查", role: "议案数字员工", detail: "根据职能审核规则，对议案材料进行专业内容检查。" },
+    { title: "技能调取与检测", role: "议案数字员工", detail: "如配置相关 Skill，则按 Skill 规则进行职能内容检查。" },
+    { title: "生成职能审核建议", role: "议案数字员工", detail: "根据检查结果生成可供负责人查看和修改的职能审核建议。" },
+    { title: "职能审核内容推送", role: "议案数字员工", detail: "通过议案机器人将审核建议推送给职能审核负责人。" },
+    { title: "职能审核核验", role: "各环节负责人", detail: "负责人在钉钉内查看并可修改审核意见，选择驳回或通过；通过后自动进入战执委审核。", h5Operation: "functional-review" },
+    { title: "整理驳回信息", role: "议案数字员工", detail: "被驳回时，整理原议案文件、审核意见和审核人信息。" },
+    { title: "驳回材料推送", role: "议案数字员工", detail: "将整理后的材料和审核意见发送给申请人进行修改。" },
+    { title: "职能审核驳回修改", role: "申请人", detail: "申请人依据审核意见在钉钉内修改并重新提交；提交后重新进入修改信息识别。", h5Operation: "functional-revision" },
+  ],  "08": [
+    { title: "战执委检查", role: "议案数字员工", detail: "根据战执委审核规则，对议案材料进行决策边界与关键风险检查。" },
+    { title: "技能调取与检测", role: "议案数字员工", detail: "如配置相关 Skill，则按 Skill 规则进行战执委审核检查。" },
+    { title: "生成战执委审核建议", role: "议案数字员工", detail: "根据检查结果生成可供负责人查看和修改的战执委审核建议。" },
+    { title: "战执委审核内容推送", role: "议案数字员工", detail: "通过议案机器人将审核建议推送给战执委审核负责人。" },
+    { title: "战执委审核核验", role: "各环节负责人", detail: "负责人在钉钉内查看并可修改审核意见，选择驳回或通过；通过后自动进入审议流程。", h5Operation: "executive-review" },
+    { title: "整理驳回信息", role: "议案数字员工", detail: "被驳回时，整理原议案文件、审核意见和审核人信息。" },
+    { title: "驳回材料推送", role: "议案数字员工", detail: "将整理后的材料和审核意见发送给申请人进行修改。" },
+    { title: "战执委审核驳回修改", role: "申请人", detail: "申请人依据审核意见在钉钉内修改并重新提交；提交后重新进入修改信息识别。", h5Operation: "executive-revision" },
+  ],  "12": [
+    { title: "确认审议信息", role: "议案数字员工", detail: "明确当前议案的审议形式、通知群；如为群投票，明确投票群及投票人名单。" },
+    { title: "填写审议基础信息", role: "各环节负责人", detail: "在钉钉内根据已明确的审议信息填写相关内容。", h5Operation: "deliberation-info" },
+    { title: "同步审议信息", role: "议案数字员工", detail: "将填写的审议信息同步到智能体的数据结构中。" },
+  ],  "13": [
+    { title: "加载表决话术 Skill", role: "议案数字员工", detail: "如配置表决话术相关 Skill，则进行调用加载。" },
+    { title: "生成表决话术", role: "议案数字员工", detail: "根据已加载的 Skill 生成表决话术。" },
+    { title: "整理审议材料", role: "议案数字员工", detail: "整理表决话术以外、审议所需的全部材料。" },
+    { title: "发送负责人审查", role: "议案数字员工", detail: "将审议材料发送给负责人进行审查。" },
+    { title: "确认审议材料", role: "各环节负责人", detail: "负责人在钉钉内对审议材料进行修改和确认。", h5Operation: "deliberation-material" },
+    { title: "同步审议材料信息", role: "议案数字员工", detail: "将确认后的审议材料内容同步到智能体的数据结构中。" },
+    { title: "发送审议通知群", role: "议案数字员工", detail: "将审议材料发送到指定的审议通知群中。" },
+  ],  "14": [
+    { title: "审议结果监控", role: "议案数字员工", detail: "群投票结束后自动收集结果；线上或线下审议则按设定间隔向负责人发送钉钉消息确认。" },
+    { title: "填写审议结果", role: "各环节负责人", detail: "确认审议结束后，在钉钉内手动填写相关结果信息。", h5Operation: "meeting-result" },
+    { title: "同步审议结果", role: "议案数字员工", detail: "将审议结果回填到智能体的数据结构中。" },
+  ],  "15": [
+    { title: "加载公告 Skill", role: "议案数字员工", detail: "如配置公告相关 Skill，则进行调用加载。" },
+    { title: "生成公告", role: "议案数字员工", detail: "根据 Skill 生成审议公告。" },
+    { title: "公告推送确认", role: "议案数字员工", detail: "将生成的公告发送给负责人进行确认。" },
+    { title: "审议公告确认", role: "各环节负责人", detail: "负责人在钉钉内对公告进行修改和确认。", h5Operation: "announcement" },
+    { title: "同步公告信息", role: "议案数字员工", detail: "将确认后的公告信息回填到智能体的数据结构中。" },
+    { title: "公告发送", role: "议案数字员工", detail: "将公告发送到审议通知群中。" },
+  ],  "16": [
+    { title: "技能调用", role: "议案数字员工", detail: "调用决议文件生成技能。" },
+    { title: "生成决议文件", role: "议案数字员工", detail: "生成对应的决议文件。" },
+    { title: "决议文件推送确认", role: "各环节负责人", detail: "接收并确认决议文件。" },
+    { title: "决议文件确认", role: "各环节负责人", detail: "钉钉内确认决议文件。", h5Operation: "resolution-document" },
+    { title: "信息回填", role: "各环节负责人", detail: "回填决议文件确认信息。" },
+    { title: "传送到传递环节", role: "议案数字员工", detail: "将确认后的决议文件传送至决议传递智能体。" },
+  ],  "17": [
+    { title: "技能调用", role: "议案数字员工", detail: "调用指令生成技能。" },
+    { title: "生成指令", role: "议案数字员工", detail: "生成结构化执行指令。" },
+    { title: "指令推送确认", role: "各环节负责人", detail: "接收并确认执行指令。" },
+    { title: "指令确认", role: "各环节负责人", detail: "钉钉内确认执行指令。", h5Operation: "instruction" },
+    { title: "信息回填", role: "各环节负责人", detail: "回填指令确认与责任信息。" },
+    { title: "传送到执行监听", role: "议案数字员工", detail: "将确认后的指令传送至执行监听环节。" },
+  ],  "18": [
+    { title: "读取向上审批配置", role: "议案数字员工", detail: "读取决议文件确认环节中已明确的“是否需要向上审批”配置。" },
+    { title: "决议分发", role: "议案数字员工", detail: "需要向上审批则进入向上审批；不需要则直接并行进入横向备案和向下分发。" },
+  ],  "19": [
+    { title: "发送决议文件审批", role: "议案数字员工", detail: "将决议文件发送给指定审批人进行审批。" },
+    { title: "决议文件审批", role: "各环节负责人", detail: "审批人在钉钉内进行审批确认并填写审批意见。", h5Operation: "resolution-approval" },
+    { title: "同步审批结果", role: "议案数字员工", detail: "将审批结果和审批意见同步到智能体的数据结构中。" },
+  ],  "20": [
+    { title: "生成决议备案确认推送", role: "议案数字员工", detail: "生成并推送决议备案确认内容。" },
+    { title: "决议横向审批", role: "各环节负责人", detail: "钉钉内确认横向备案。", h5Operation: "resolution-filing" },
+    { title: "信息回填", role: "各环节负责人", detail: "回填备案确认信息。" },
+    { title: "执行备案", role: "议案数字员工", detail: "完成决议备案执行并记录结果。" },
+  ],  "22": [
+    { title: "发送决议通知", role: "议案数字员工", detail: "将决议文件发送给申请人，完成结果通知与决议内容同步。" },
+    { title: "确认决议文件", role: "申请人", detail: "申请人在钉钉内确认决议文件及通知结果。", h5Operation: "resolution-downward" },
+    { title: "同步确认结果", role: "议案数字员工", detail: "将申请人的确认结果同步到智能体的数据结构中。" },
+    { title: "进入执行监听", role: "议案数字员工", detail: "确认后认定决议开始执行，并进入执行监听节点。" },
+  ],  "23": [
+    { title: "定时发送执行情况填写通知", role: "议案数字员工", detail: "定时向指定负责人发送决议和指令执行情况的填写通知；两项执行均结束后，统一进入下一步分析。" },
+    { title: "填写决议执行情况", role: "各环节负责人", detail: "决议执行结束后，在钉钉内填写决议执行情况。", h5Operation: "resolution-execution" },
+    { title: "填写指令执行情况", role: "各环节负责人", detail: "指令执行结束后，在钉钉内填写指令执行情况。", h5Operation: "instruction-execution" },
+  ],  "24": [
+    { title: "技能调用", role: "议案数字员工", detail: "调用执行结果分析相关技能。" },
+    { title: "决议执行情况分析", role: "议案数字员工", detail: "分析决议执行进度、结果及异常情况。" },
+    { title: "指令执行情况分析", role: "议案数字员工", detail: "分析指令执行进度、结果及异常情况。" },
+    { title: "议案执行结果推送确认", role: "各环节负责人", detail: "接收并确认议案执行结果。" },
+    { title: "议案执行确认", role: "各环节负责人", detail: "钉钉内确认议案执行结果。", h5Operation: "execution-confirm" },
+    { title: "信息回填", role: "各环节负责人", detail: "回填执行结果确认及补充信息。" },
+  ],  "25": [
+    { title: "归档材料整理", role: "议案数字员工", detail: "汇总整理议案、决议与执行过程中的归档材料。" },
+    { title: "归档材料确认推送", role: "议案数字员工", detail: "将归档材料推送至相关负责人确认。" },
+    { title: "议案归档确认", role: "各环节负责人", detail: "钉钉内确认议案归档材料。", h5Operation: "archive-confirm" },
+  ],  "26": [
+    { title: "执行归档", role: "议案数字员工", detail: "完成执行材料归档并记录归档结果。" },
+  ],
+};
 
 function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -821,176 +956,23 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [drag, setDrag] = useState<{ x: number; y: number; originX: number; originY: number } | null>(null);
   const [selectedNode, setSelectedNode] = useState<DigitalEmployeeNode | null>(null);
+  const [selectedSubtask, setSelectedSubtask] = useState<string | null>(null);
+  const [h5Operation, setH5Operation] = useState<string | null>(null);
   const [drawerView, setDrawerView] = useState<"tasks" | "trace">("tasks");
   const [selectedTraceNode, setSelectedTraceNode] = useState<string | null>(null);
-  const [proposalSearch, setProposalSearch] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
   const wheelVelocityRef = useRef({ x: 0, y: 0 });
   const wheelFrameRef = useRef<number | null>(null);
   const nodesByLane = digitalEmployeeStages.map((_, lane) => digitalEmployeeNodes.filter((node) => node.lane === lane));
-  const detailLinks = nodesByLane.flatMap((nodes) => nodes.slice(0, -1).map((node, index) => {
-    const next = nodes[index + 1];
-    const centerX = node.x + 69;
-    return `M${centerX} ${node.y + 70} C${centerX - 47} ${node.y + 82} ${centerX + 47} ${next.y - 12} ${centerX} ${next.y}`;
-  }));
+  const detailLinks: string[] = [];
   // 跨一级阶段仅保留图中真实的流转入口，使用弧线避开本阶段的审核/分支节点。
-  const crossLinks = [
-    "M249 469 C315 469 350 365 420 365",
-    "M558 725 C625 725 650 409 730 409",
-    "M868 701 C935 701 960 409 1040 409",
-    "M1178 609 C1245 609 1270 409 1350 409",
-  ];
-  // 二级流程的直达分支：保留原有逐节点流转，同时明确显示图中补充的跳转关系。
-  const secondaryBypassLinks = [
-    "M420 365 C330 400 330 510 420 545",
-    "M868 701 C1045 784 1210 784 1350 409",
-  ];
-  const proposalNodeId = (proposal: Proposal) => {
-    if (proposal.executionStatus === "已归档") return "14";
-    if (proposal.executionStatus === "已完成") return "13";
-    if (proposal.executionStatus) return "12";
-    if (proposal.deliberationStatus === "审议完成" || proposal.deliberationStatus === "公告已发送") return "09";
-    if (proposal.deliberationStatus) return "08";
-    if (proposal.stage === "auditpassed") return "07";
-    if (proposal.stage === "voting" || proposal.stage === "votepassed" || proposal.stage === "votefailed") return "08";
-    if (proposal.stage === "audit" || proposal.stage === "prepassed") return "06";
-    if (proposal.stage === "functional") return "05";
-    if (proposal.stage === "returned") return "03";
-    return "01";
-  };
-  const proposalSearchResults = useMemo(() => {
-    const keyword = proposalSearch.trim().toLowerCase();
-    if (!keyword) return original.slice(0, 6);
-    return original.filter((proposal) => proposal.title.toLowerCase().includes(keyword)).slice(0, 8);
-  }, [proposalSearch]);
-  const openProposalTrace = (proposal: Proposal) => {
-    const node = digitalEmployeeNodes.find((item) => item.id === proposalNodeId(proposal));
-    if (!node) return;
-    const rect = viewportRef.current?.getBoundingClientRect();
-    const targetZoom = Math.max(fitZoom, 0.68);
-    const drawerWidth = rect ? Math.min(470, rect.width * 0.41) : 0;
-    if (rect) setPan({ x: (rect.width - drawerWidth) / 2 - (node.x + 69) * targetZoom, y: rect.height / 2 - (node.y + 35) * targetZoom });
-    setZoom(targetZoom);
-    setSelectedNode(node);
-    setSelectedTraceNode(null);
-    setDrawerView("trace");
-    setProposalSearch(proposal.title);
-    setSearchOpen(false);
-    notice(`已定位至「${proposal.title}」当前节点：${node.title}`);
-  };
-  const primaryTraceNodes = selectedNode ? nodesByLane[selectedNode.lane] : [];
-  const focusedTraceGroup = primaryTraceNodes.findIndex((node) => node.id === selectedNode?.id);
-  const currentTraceStep = selectedNode ? Math.min(1, selectedNode.steps.length - 1) : 0;
-  const completedTraceRoute = (group: DigitalEmployeeNode) => new Set(({
-    "01": [0, 1, 2, 3, 4], "02": [0], "04": [0, 1], "05": [0, 1], "07": [0, 1], "08": [0], "09": [0, 3], "10": [0], "11": [0, 2], "12": [0], "13": [0],
-  } as Record<string, number[]>)[group.id] ?? group.steps.map((_, index) => index));
-  const traceStatus = (groupIndex: number, stepIndex: number) => {
-    if (groupIndex < focusedTraceGroup) return completedTraceRoute(primaryTraceNodes[groupIndex]).has(stepIndex) ? "complete" : "idle";
-    if (groupIndex === focusedTraceGroup) return stepIndex < currentTraceStep ? "complete" : stepIndex === currentTraceStep ? "running" : "idle";
-    return "idle";
-  };
-  const traceTool = (step: string) => step.includes("检查") || step.includes("校验") ? "rule-validation-skill" : step.includes("通知") ? "message-notification-skill" : step.includes("生成") ? "document-generation-skill" : "workflow-orchestration-skill";
-  const traceMcp = (step: string) => step.includes("通知") ? "feishu-message MCP" : step.includes("生成") ? "document-render MCP" : step.includes("检查") || step.includes("校验") ? "knowledge-search MCP" : "workflow-runtime MCP";
-  // 三级连线按原流程的汇聚、分流关系绘制，而不是把同一组节点全部互连。
-  const traceStepEdges = (group: DigitalEmployeeNode): [number, number][] => {
-    const edgeMap: Record<string, [number, number][]> = {
-      "01": [[0, 1], [0, 2], [0, 3], [0, 4]],
-      "02": [[0, 1]],
-      "09": [[0, 3], [1, 4], [2, 5], [3, 6], [4, 6], [5, 6]],
-      "11": [[0, 2], [1, 3]],
-    };
-    return edgeMap[group.id] ?? group.steps.slice(0, -1).map((_, index) => [index, index + 1] as [number, number]);
-  };
-  let traceY = 28;
-  const traceLayouts = primaryTraceNodes.map((group, groupIndex) => {
-    const rows = Math.ceil(group.steps.length / 2);
-    const height = 42 + rows * 72 + 18;
-    const layout = { group, groupIndex, y: traceY, height };
-    traceY += height + 30;
-    return layout;
-  });
-  const traceCanvasHeight = Math.max(180, traceY);
-  const tracePosition = (layout: typeof traceLayouts[number], stepIndex: number) => ({ x: stepIndex % 2 ? 207 : 16, y: layout.y + 36 + Math.floor(stepIndex / 2) * 72 + (stepIndex % 2 ? 5 : 0) });
-  const traceLinkPath = (from: { x: number; y: number }, to: { x: number; y: number }) => {
-    if (Math.abs(to.y - from.y) < 28) {
-      const rightwards = to.x > from.x;
-      const startX = from.x + (rightwards ? 138 : 0);
-      const endX = to.x + (rightwards ? 0 : 138);
-      const y = from.y + 27;
-      return `M${startX} ${y} H${endX}`;
-    }
-    const startX = from.x + 69;
-    const endX = to.x + 69;
-    const midY = Math.round((from.y + 54 + to.y) / 2);
-    return `M${startX} ${from.y + 54} V${midY} H${endX} V${to.y}`;
-  };
-  const traceGraphLinks = traceLayouts.flatMap((layout) => traceStepEdges(layout.group).map(([fromIndex, toIndex]) => {
-    const from = tracePosition(layout, fromIndex);
-    const to = tracePosition(layout, toIndex);
-    return { path: traceLinkPath(from, to), active: traceStatus(layout.groupIndex, fromIndex) !== "idle" && traceStatus(layout.groupIndex, toIndex) !== "idle" };
-  })).concat(traceLayouts.slice(0, -1).flatMap((layout, index) => {
-    const next = traceLayouts[index + 1];
-    const branchMap: Record<string, [number, number][]> = {
-      "01": [[1, 0], [2, 0], [3, 0], [4, 0]],
-      "02": [[1, 0]],
-      "07": [[2, 0]],
-      "08": [[0, 0]],
-      "09": [[4, 0], [5, 0]],
-      "10": [[1, 0], [1, 1]],
-      "11": [[2, 0], [3, 0]],
-      "12": [[1, 0]],
-      "13": [[1, 0]],
-    };
-    const edges = branchMap[layout.group.id] ?? [[layout.group.steps.length - 1, 0] as [number, number]];
-    return edges.map(([fromIndex, toIndex]) => {
-      const from = tracePosition(layout, fromIndex);
-      const to = tracePosition(next, toIndex);
-      return { path: traceLinkPath(from, to), active: traceStatus(layout.groupIndex, fromIndex) !== "idle" && traceStatus(next.groupIndex, toIndex) !== "idle" };
-    });
-  })).concat(traceLayouts.flatMap((layout) => {
-    if (layout.group.id !== "02") return [];
-    // 「修改信息识别与路由」可直接分流至各审核层级，不经过“修改信息标记”节点。
-    return ["04", "05", "06"].flatMap((targetId) => {
-      const target = traceLayouts.find((item) => item.group.id === targetId);
-      if (!target) return [];
-      const from = tracePosition(layout, 1);
-      const to = tracePosition(target, 0);
-      return [{ path: traceLinkPath(from, to), active: traceStatus(layout.groupIndex, 1) !== "idle" && traceStatus(target.groupIndex, 0) !== "idle" }];
-    });
-  }));
-  useEffect(() => {
-    if (drawerView !== "trace") return;
-    const svg = document.querySelector<SVGSVGElement>(".bp-trace-lines");
-    if (!svg) return;
-    svg.querySelectorAll(".bp-generated-link").forEach((element) => element.remove());
-    const ns = "http://www.w3.org/2000/svg";
-    traceGraphLinks.forEach(({ path, active }) => {
-      const group = document.createElementNS(ns, "g");
-      group.setAttribute("class", `bp-generated-link ${active ? "active" : "idle"}`);
-      const line = document.createElementNS(ns, "path");
-      line.setAttribute("d", path);
-      line.setAttribute("marker-end", "url(#bp-trace-arrow)");
-      group.append(line);
-      if (active) {
-        const dot = document.createElementNS(ns, "circle");
-        dot.setAttribute("r", "1.7");
-        const motion = document.createElementNS(ns, "animateMotion");
-        motion.setAttribute("dur", "2.5s"); motion.setAttribute("repeatCount", "indefinite"); motion.setAttribute("path", path);
-        dot.append(motion); group.append(dot);
-      }
-      svg.append(group);
-    });
-  }, [drawerView, selectedNode?.id]);
-  useEffect(() => {
-    if (drawerView !== "trace") return;
-    const frame = requestAnimationFrame(() => document.querySelector<HTMLElement>(".bp-trace-canvas-group.focused")?.scrollIntoView({ behavior: "smooth", block: "center" }));
-    return () => cancelAnimationFrame(frame);
-  }, [drawerView, selectedNode?.id]);
+  const crossLinks: string[] = [];
+  // 一级智能体之间仅保留参考图中的阶段串联；二级模块不增加额外跳线。
+  const secondaryBypassLinks: string[] = [];
   useEffect(() => {
     const fit = () => {
       const rect = viewportRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const value = Math.min(1, Math.max(0.42, Math.min((rect.width - 28) / 1735, (rect.height - 28) / 840)));
+      const value = Math.min(1, Math.max(0.42, Math.min((rect.width - 28) / 2230, (rect.height - 28) / 1000)));
       setFitZoom(value);
       setZoom(value);
       setPan({ x: 0, y: 0 });
@@ -1031,10 +1013,11 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
       if (wheelFrameRef.current !== null) cancelAnimationFrame(wheelFrameRef.current);
     };
   }, []);
+  const completeH5Operation = () => { const operation = h5Operation; setH5Operation(null); if (operation === "application") { setSelectedSubtask("03-2"); notice("议案申请已提交，已进入自动编码"); return; } notice("钉钉内操作已提交，流程将继续处理"); };
   const resetView = () => { setZoom(fitZoom); setPan({ x: 0, y: 0 }); };
   const zoomBy = (delta: number) => setZoom((value) => Math.max(0.42, Math.min(1.18, Number((value + delta).toFixed(2)))));
   const startDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest("button,input,.bp-proposal-search")) return;
+    if ((event.target as HTMLElement).closest("button,input")) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     setDrag({ x: event.clientX, y: event.clientY, originX: pan.x, originY: pan.y });
   };
@@ -1109,14 +1092,9 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   const renderNodeRecord = (record: { key: string; type: string; value: string }, changed = false) => <div className={`bp-data-record ${record.type} ${changed ? "changed" : ""}`} key={record.key}><code>{record.key}</code>{record.type === "file" ? <div className="bp-data-file"><FileText size={16}/><div><b>{record.value.split(" · ")[0]}</b><small>{record.value.split(" · ")[1]}</small></div><i>↗</i></div> : <p>{record.value}</p>}</div>;
   const nodeDataModal = selectedTraceNode && nodeData && <div className="bp-node-data-modal-backdrop" onClick={() => setSelectedTraceNode(null)}><section className="bp-node-data-modal" role="dialog" aria-modal="true" aria-label={`${selectedTraceNode} 节点详情`} onClick={(event) => event.stopPropagation()}><header><div><small>NODE BUSINESS DETAIL</small><h3>{selectedTraceNode}</h3><p>本节点仅展示发生变更的业务字段。</p></div><button type="button" onClick={() => setSelectedTraceNode(null)} aria-label="关闭详情"><X size={17}/></button></header><section><h4>议案基础信息</h4>{nodeData.normal.map((record) => renderNodeRecord(record))}</section>{nodeData.changed.length > 0 && <section className="bp-changed-data"><h4>本环节更新字段</h4>{nodeData.changed.map((record) => renderNodeRecord(record, true))}</section>}<footer><div><span>调用 Skill</span>{nodeData.skills.length ? nodeData.skills.map((skill) => <b key={skill}>{skill}</b>) : <b>本节点未调用 Skill</b>}</div><div><span>调用 MCP</span>{nodeData.mcps.length ? nodeData.mcps.map((mcp) => <b key={mcp}>{mcp}</b>) : <b>本节点未调用 MCP</b>}</div></footer></section></div>;
   return <main className="blueprint-flow-page">
-    <section className="bp-proposal-search" aria-label="搜索议案并定位流程">
-      <Search size={15}/><input value={proposalSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setProposalSearch(event.target.value); setSearchOpen(true); }} onKeyDown={(event) => { if (event.key === "Enter" && proposalSearchResults[0]) openProposalTrace(proposalSearchResults[0]); }} placeholder="搜索议案名称，定位当前流程" />
-      {proposalSearch && <button type="button" onClick={() => { setProposalSearch(""); setSearchOpen(true); }} aria-label="清空搜索"><X size={13}/></button>}
-      {searchOpen && <div className="bp-proposal-search-results">{proposalSearchResults.length ? proposalSearchResults.map((proposal) => { const currentNode = digitalEmployeeNodes.find((item) => item.id === proposalNodeId(proposal)); return <button type="button" onClick={() => openProposalTrace(proposal)} key={proposal.id}><b>{proposal.title}</b><span>当前节点 · {currentNode?.title}</span></button>; }) : <p>未找到匹配的议案名称</p>}</div>}
-    </section>
     <div className="blueprint-viewport" ref={viewportRef} onPointerDown={startDrag} onPointerMove={(event) => { if (drag) setPan({ x: drag.originX + event.clientX - drag.x, y: drag.originY + event.clientY - drag.y }); }} onPointerUp={() => setDrag(null)} onPointerCancel={() => setDrag(null)}>
       <div className="blueprint-canvas" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
-        <svg className="blueprint-lines" viewBox="0 0 1735 840" aria-hidden="true">
+        <svg className="blueprint-lines" viewBox="0 0 2230 1000" aria-hidden="true">
           <defs>
             <marker id="bp-stage-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L8 4.5 L0 9z" fill="#69e8ff" /></marker>
             <marker id="bp-main-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8z" fill="#72efff" /></marker>
@@ -1126,12 +1104,19 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
           <g className="bp-stage-links">
             {digitalEmployeeStages.slice(0, -1).map((stage, index) => {
               const next = digitalEmployeeStages[index + 1];
-              const path = `M${stage.x + 182} 166 H${next.x}`;
+              const path = `M${stage.x + 182} 530 H${next.x}`;
               return <g key={stage.title}><path d={path} markerEnd="url(#bp-stage-arrow)" /><circle className="bp-moving-dot" r="2.3"><animateMotion dur="1.8s" repeatCount="indefinite" path={path} /></circle></g>;
             })}
           </g>
           <g className="bp-stage-maps">
-            {digitalEmployeeStages.map((stage) => { const path = `M${stage.x + 30} 186 V366`; return <path d={path} markerEnd="url(#bp-down-arrow)" key={stage.title} />; })}
+            {digitalEmployeeStages.map((stage, index) => {
+              const laneNodes = nodesByLane[index];
+              const first = laneNodes[0]; const last = laneNodes[laneNodes.length - 1];
+              const leftRail = `M${stage.agentX - 15} ${first.y + 35} V${last.y + 35}`;
+              const rightRail = `M${stage.agentX + 153} ${first.y + 35} V${last.y + 35}`;
+              const moduleLinks = laneNodes.flatMap((node) => [{ path: `M${stage.agentX - 15} ${node.y + 35} H${stage.agentX}`, inbound: true }, { path: `M${stage.agentX + 138} ${node.y + 35} H${stage.agentX + 153}`, inbound: false }]);
+              return <g key={stage.title}><path d={leftRail}/><path d={rightRail}/>{moduleLinks.map(({ path, inbound }) => <path d={path} markerEnd={inbound ? "url(#bp-down-arrow)" : undefined} key={path}/>)}</g>;
+            })}
           </g>
           <g className="bp-detail-flow" filter="url(#bp-glow)">
             {detailLinks.map((path) => <g key={path}><path d={path} markerEnd="url(#bp-down-arrow)"/><circle className="bp-moving-dot" r="2.1"><animateMotion dur="2.3s" repeatCount="indefinite" path={path} /></circle></g>)}
@@ -1140,27 +1125,56 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
             {crossLinks.map((path) => <g key={path}><path d={path} markerEnd="url(#bp-main-arrow)"/><circle className="bp-moving-dot" r="2.1"><animateMotion dur="2.7s" repeatCount="indefinite" path={path} /></circle></g>)}
             {secondaryBypassLinks.map((path) => <g key={path}><path d={path} markerEnd="url(#bp-main-arrow)"/><circle className="bp-moving-dot" r="2.1"><animateMotion dur="2.7s" repeatCount="indefinite" path={path} /></circle></g>)}
           </g>
-          <path className="bp-lifecycle-boundary" d="M75 785 V812 H1640 V785" />
+
         </svg>
         {digitalEmployeeStages.map((stage, index) => <section className="bp-stage" style={{ left: stage.x }} key={stage.title}>
-          <span className="bp-stage-index">{String(index + 1).padStart(2, "0")}</span><b>{stage.title}</b><small>{stage.desc}</small><i />
+          <span className="bp-stage-index">{String(index + 1).padStart(2, "0")}</span><b>{stage.title}</b><i />
         </section>)}
-        {digitalEmployeeStages.map((stage, index) => <div className="bp-lane" style={{ left: stage.x - 105 }} key={stage.lane}><b>{digitalEmployeeLanes[index]}</b><span>二级流程</span></div>)}
-        {digitalEmployeeStages.map((stage) => <span className="bp-map-label" style={{ left: stage.x - 18 }} key={`${stage.title}-map`}>流程映射</span>)}
-        {digitalEmployeeNodes.map((node) => <button type="button" className={`bp-node ${node.tone} ${selectedNode?.id === node.id ? "active" : ""}`} style={{ left: node.x, top: node.y }} key={node.id} onClick={() => { setSelectedNode(node); setSelectedTraceNode(null); setDrawerView("tasks"); }}><em>二级流程 {node.id}</em><i>{node.id}</i><b>{node.title}</b><span>↗</span></button>)}
+        {digitalEmployeeStages.map((stage) => <section className="bp-agent-title" style={{ left: stage.agentX - 22 }} key={`${stage.title}-agent`}><i />{stage.agentTitle}</section>)}
+        {digitalEmployeeStages.map((stage, index) => {
+  const laneNodes = nodesByLane[index];
+  const top = 14;
+  const left = stage.x - 20;
+  const right = stage.x + 415;
+  const bottom = Math.max(...laneNodes.map((node) => node.y + 70)) + 30;
+  return <div className="bp-lane" style={{ left, top, width: right - left, height: bottom - top }} key={`${stage.lane}-${index}`} aria-label={`${stage.agentTitle}流程分区`} />;
+})}
+        
+        {digitalEmployeeNodes.map((node, index) => <button type="button" className={`bp-node ${node.tone} ${selectedNode?.id === node.id ? "active" : ""}`} style={{ left: node.x, top: node.y }} key={node.id} onClick={() => { setSelectedNode(node); setSelectedSubtask(null); setSelectedTraceNode(null); setDrawerView("tasks"); }}><em>二级节点 · {String(index + 1).padStart(2, "0")}</em><b>{node.title}</b></button>)}
       </div>
       <aside className="bp-tools" aria-label="画布视图控制"><button type="button" onClick={() => zoomBy(0.08)} aria-label="放大"><ZoomIn size={16}/></button><strong>{Math.round(zoom * 100)}%</strong><button type="button" onClick={() => zoomBy(-0.08)} aria-label="缩小"><ZoomOut size={16}/></button><i/><button type="button" onClick={resetView} aria-label="复位视图"><RotateCcw size={15}/></button></aside>
     </div>
-    {selectedNode && <aside className="bp-task-drawer" aria-label={`${selectedNode.title}三级流程`}>
-      <header><div><small>{drawerView === "tasks" ? "AGENT RUNNING TASKS" : "TASK EXECUTION TRACE"}</small><h2>{selectedNode.title}</h2><p>{drawerView === "tasks" ? `当前节点包含 ${selectedNode.steps.length} 个三级处理环节` : "展示所属一级阶段的完整三级流程"}</p></div><button type="button" onClick={() => setSelectedNode(null)} aria-label="关闭"><X size={23}/></button></header>
-      <div className="bp-drawer-progress"><span>{drawerView === "tasks" ? "正在运行的议案" : "全链路执行进度"}</span><b>{drawerView === "tasks" ? "2 项" : "68%"}</b><i><em /></i></div>
-      {drawerView === "tasks" ? <section className="bp-proposal-list">
-        {["2026-001 技术改造项目议案", "2026-008 经营优化专项议案"].map((proposal, index) => <article className="bp-proposal-task" role="button" tabIndex={0} onClick={() => setDrawerView("trace")} onKeyDown={(event) => { if (event.key === "Enter") setDrawerView("trace"); }} key={proposal}>
-          <div><b>{proposal}</b><span className={index ? "waiting" : "running"}>{index ? "待处理" : "运行中"}</span></div><p>发起人：战略执行委员会 · 当前流转至「{selectedNode.title}」</p><div className="bp-task-meter"><i style={{ width: `${index ? 42 : 68}%` }} /></div>
-        </article>)}
-      </section> : <section className="bp-trace-list"><button type="button" className="bp-trace-back" onClick={() => setDrawerView("tasks")}>← 返回运行任务</button><section className="bp-primary-trace"><div className="bp-trace-canvas" style={{ height: traceCanvasHeight }}><svg className="bp-trace-lines" viewBox={`0 0 400 ${traceCanvasHeight}`} aria-hidden="true"><defs><marker id="bp-trace-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7z" fill="#67e8f6" /></marker><filter id="bp-trace-glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>{traceLayouts.flatMap((layout) => layout.group.steps.slice(1).map((_, index) => { const from = tracePosition(layout, 0); const to = tracePosition(layout, index + 1); const active = traceStatus(layout.groupIndex, index + 1) !== "idle"; const path = `M${from.x + 138} ${from.y + 27} C${from.x + 184} ${from.y + 29} ${to.x - 26} ${to.y + 25} ${to.x} ${to.y + 25}`; return <g className={active ? "active" : "idle"} key={path}><path d={path} markerEnd="url(#bp-trace-arrow)"/><circle r="1.7"><animateMotion dur="2.3s" repeatCount="indefinite" path={path}/></circle></g>; })).concat(traceLayouts.slice(0, -1).map((layout, index) => { const from = tracePosition(layout, 0); const to = tracePosition(traceLayouts[index + 1], 0); const active = index < focusedTraceGroup; const path = `M${from.x + 69} ${from.y + 54} C${from.x + 8} ${from.y + 82} ${to.x + 122} ${to.y - 30} ${to.x + 69} ${to.y}`; return <g className={active ? "active" : "idle"} key={path}><path d={path} markerEnd="url(#bp-trace-arrow)"/><circle r="1.7"><animateMotion dur="2.7s" repeatCount="indefinite" path={path}/></circle></g>; }))}</svg>{traceLayouts.map((layout) => <React.Fragment key={layout.group.id}><section className={`bp-trace-canvas-group ${layout.groupIndex === focusedTraceGroup ? "focused" : ""}`} style={{ top: layout.y, height: layout.height }}><span>二级流程 {layout.group.id}</span><b>{layout.group.title}</b></section>{layout.group.steps.map((step, stepIndex) => { const point = tracePosition(layout, stepIndex); const status = traceStatus(layout.groupIndex, stepIndex); return <button type="button" className={`bp-trace-canvas-node ${status}`} style={{ left: point.x, top: point.y }} key={step} onClick={() => setSelectedTraceNode(step)}><em>三级节点 {layout.group.id}.{stepIndex + 1}</em><i>{status === "complete" ? "✓" : status === "running" ? "●" : "○"}</i><b>{step}</b></button>; })}</React.Fragment>)}</div></section>{selectedTraceNode && <div className="bp-trace-modal-backdrop" onClick={() => setSelectedTraceNode(null)}><section className="bp-trace-modal" role="dialog" aria-modal="true" aria-label={`${selectedTraceNode}节点数据`} onClick={(event) => event.stopPropagation()}><header><div><small>NODE DATA / SKILL & MCP</small><h3>{selectedTraceNode}</h3></div><button type="button" onClick={() => setSelectedTraceNode(null)} aria-label="关闭数据"><X size={17}/></button></header><section><span>输入数据</span><p>上游节点材料、字段信息与当前议案上下文</p></section><section><span>输出数据</span><p>节点处理结果、状态记录与后续流转参数</p></section><footer><div><span>调用 Skill</span><b>{traceTool(selectedTraceNode)}</b></div><div><span>调用 MCP</span><b>{traceMcp(selectedTraceNode)}</b></div></footer></section></div>}</section>}
+    {selectedNode && <aside className="bp-task-drawer" aria-label={`${selectedNode.title}模块子任务`}>
+      <header><div><small>AGENT SUBTASKS</small><h2>{selectedNode.title}</h2><p>当前二级模块包含 {digitalEmployeeSubtasks[selectedNode.id].length} 项协同子任务</p></div><button type="button" onClick={() => setSelectedNode(null)} aria-label="关闭"><X size={23}/></button></header>
+      <div className="bp-drawer-progress"><span>模块子任务</span><b>{digitalEmployeeSubtasks[selectedNode.id].length} 项</b><i><em style={{ width: "100%" }} /></i></div>
+      <section className="bp-subtask-list">
+        {digitalEmployeeSubtasks[selectedNode.id].map((task, index) => { const taskKey = `${selectedNode.id}-${index}`; return <button type="button" className={`bp-subtask ${selectedSubtask === taskKey ? "active" : ""}`} key={taskKey} onClick={() => { setSelectedSubtask(taskKey); if (task.h5Operation) setH5Operation(task.h5Operation); }}>
+          <header><span>子任务 {String(index + 1).padStart(2, "0")}</span><em className={task.h5Operation ? "h5-action" : ""}>{task.h5Operation ? "钉钉内操作" : task.role}</em></header><b>{task.title}</b><p>{task.detail}</p>
+        </button>; })}
+      </section>
     </aside>}
-    {nodeDataModal}
+    <div className="bp-h5-operation">
+      {h5Operation === "application" && <ProposalApplicationDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "basic-review" && <ProposalReviewDrawer mode="basic" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "basic-revision" && <ProposalReviewDrawer mode="revision" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "functional-review" && <ProposalReviewDrawer mode="functional" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "functional-revision" && <ProposalReviewDrawer mode="functional-revision" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "executive-review" && <ProposalReviewDrawer mode="executive" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "executive-revision" && <ProposalReviewDrawer mode="executive-revision" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "deliberation-info" && <DeliberationInfoDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "deliberation-material" && <DeliberationMaterialDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "meeting-result" && <MeetingResultDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "announcement" && <H5AnnouncementConfirmDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "resolution-document" && <ResolutionDocumentDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "instruction" && <InstructionConfirmDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "resolution-approval" && <ResolutionApprovalDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "resolution-filing" && <ResolutionFilingDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "resolution-downward" && <ResolutionDownwardRouteDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "resolution-execution" && <ExecutionStatusDrawer kind="resolution" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "instruction-execution" && <ExecutionStatusDrawer kind="instruction" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "execution-confirm" && <ProposalExecutionConfirmDrawer mode="execution" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "archive-confirm" && <ProposalExecutionConfirmDrawer mode="archive" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+    </div>    {nodeDataModal}
   </main>;
 }
 const dingtalkScenes = [
