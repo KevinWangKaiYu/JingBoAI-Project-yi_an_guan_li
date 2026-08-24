@@ -45,7 +45,12 @@ try {
   $remoteHook = Join-Path $temp "src/common/useHashPage.ts"
   New-Item -ItemType Directory -Path (Split-Path $remotePrototype) -Force | Out-Null
   Copy-Item -LiteralPath $Prototype -Destination $remotePrototype -Recurse -Force
-  New-Item -ItemType Directory -Path (Split-Path $remoteHook) -Force | Out-Null
+  $workflowSource = Join-Path $remotePrototype "online-preview/deploy-pages.yml"
+  if (Test-Path $workflowSource) {
+    $workflowTarget = Join-Path $temp ".github/workflows/deploy-prototype-preview.yml"
+    New-Item -ItemType Directory -Path (Split-Path $workflowTarget) -Force | Out-Null
+    Copy-Item -LiteralPath $workflowSource -Destination $workflowTarget -Force
+  }  New-Item -ItemType Directory -Path (Split-Path $remoteHook) -Force | Out-Null
   Copy-Item -LiteralPath $SharedHook -Destination $remoteHook -Force
   $remoteSkills = Join-Path $temp "skills"
   New-Item -ItemType Directory -Path $remoteSkills -Force | Out-Null
