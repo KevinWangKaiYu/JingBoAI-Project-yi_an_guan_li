@@ -73,6 +73,7 @@ const route = defineHashPageRoute(
     { id: "task-breakdown", title: "任务拆解与分配" },
     { id: "execution-tracking", title: "议案执行追踪" },
     { id: "digital-employee-flow", title: "议案数字员工流程监控" },
+    { id: "digital-employee-home", title: "数字员工" },
     { id: "dingtalk-h5-scenes", title: "钉钉 H5 交互场景" },
     { id: "skills", title: "技能定义" },
     { id: "permissions", title: "权限管理" },
@@ -348,6 +349,7 @@ const menu = [
 const userMenu = menu.filter(([id]) => id !== "digital-employee-flow");
 const userPages = new Set(userMenu.map(([id]) => id));
 const monitorPages = new Set(["digital-employee-flow"]);
+const digitalHomePages = new Set(["digital-employee-home"]);
 const dingtalkScenePages = new Set(["dingtalk-h5-scenes"]);
 const skillsSeed = [
   {
@@ -507,8 +509,8 @@ function Shell({
 }: {
   page: string;
   setPage: (id: string) => void;
-  workspace: "user" | "monitor" | "h5-scenes";
-  setWorkspace: (workspace: "user" | "monitor" | "h5-scenes") => void;
+  workspace: "user" | "monitor" | "digital-home" | "h5-scenes";
+  setWorkspace: (workspace: "user" | "monitor" | "digital-home" | "h5-scenes") => void;
   children: React.ReactNode;
 }) {
   const rail = [
@@ -539,14 +541,11 @@ function Shell({
             </button>
           ) : i === 2 ? (
             <div className="pam-digital-group" key={n}>
-              <button className={(workspace === "user" || workspace === "h5-scenes") ? "active" : ""} onClick={() => setWorkspace("user")}>
+              <button className={(workspace === "digital-home" || workspace === "user" || workspace === "h5-scenes") ? "active" : ""} onClick={() => setWorkspace("digital-home")}>
                 <I size={21} />
                 <span>{n}</span>
               </button>
-              {(workspace === "user" || workspace === "h5-scenes") && <div className="pam-digital-subnav" aria-label="数字员工模块">
-                <button className={workspace === "user" ? "selected" : ""} onClick={() => setWorkspace("user")}>议案智能管理<br/>用户端</button>
-                <button className={workspace === "h5-scenes" ? "selected" : ""} onClick={() => setWorkspace("h5-scenes")}>钉钉 H5<br/>交互场景</button>
-              </div>}
+
             </div>
           ) : (
             <button key={n}>
@@ -559,10 +558,8 @@ function Shell({
           {workspace === "monitor" ? <>
             <header className="pam-ltc-head">
               <div><small>LTC · BUSINESS LIFECYCLE CONTROL</small><h1>全业务经营闭环中心 · 全要素流动版</h1></div>
-              <section aria-label="流程统计"><span><b>6</b>一级主流程</span><span><b>33</b>二级业务流程</span><span><b>87</b>三级任务</span></section>
             </header>
-            <div className="pam-ltc-legend"><span>状态图例</span><i className="done">已完成</i><i className="running">运行中</i><i className="risk">风险提示</i><i className="danger">高风险</i><i className="timeout">已超时</i><i className="waiting">等待中</i></div>
-          </> : <div className="pam-context-bar"><span>数字员工</span><i>/</i><b>{workspace === "user" ? "议案智能管理用户端" : "钉钉 H5 交互场景"}</b></div>}
+          </> : <div className="pam-context-bar"><span>数字员工</span><i>/</i><b>{workspace === "digital-home" ? "数字员工中心" : workspace === "user" ? "议案智能管理用户端" : "钉钉 H5 交互场景"}</b></div>}
           <section className={`pam-frame ${workspace === "monitor" ? "monitor-frame" : ""} ${workspace === "h5-scenes" ? "h5-scenes-frame" : ""}`}>
             {workspace === "user" && <aside className="pam-menu">
               {userMenu.map(([id, n, I]) => (
@@ -582,6 +579,19 @@ function Shell({
       </div>
     </div>
   );
+}
+function DigitalEmployeeHome({ onOpen }: { onOpen: (target: "user" | "h5-scenes") => void }) {
+  return <main className="digital-employee-home">
+    <header><small>DIGITAL EMPLOYEE CENTER</small><h1>数字员工中心</h1><p>选择一个业务入口，进入对应的议案管理或钉钉交互场景。</p></header>
+    <section className="digital-entry-grid">
+      <button type="button" className="digital-entry-card" onClick={() => onOpen("user")}>
+        <span className="digital-entry-icon"><FileCheck2 size={31}/></span><div><small>PROPOSAL MANAGEMENT</small><h2>议案智能管理用户端</h2><p>查看议案生命周期、整理审核、审议流程、任务分配和执行追踪。</p><em>进入 →</em></div>
+      </button>
+      <button type="button" className="digital-entry-card" onClick={() => onOpen("h5-scenes")}>
+        <span className="digital-entry-icon"><Bot size={31}/></span><div><small>DINGTALK H5 SCENES</small><h2>钉钉 H5 交互场景</h2><p>体验议案申请、审核核验、修改确认等钉钉内操作流程。</p><em>进入 →</em></div>
+      </button>
+    </section>
+  </main>;
 }
 function PageTitle({
   eyebrow,
@@ -3822,11 +3832,11 @@ function RejectReasonModal({ p, onClose, onConfirm }: { p: Proposal; onClose: ()
 function App() {
   const { page, setPage } = useHashPage(route);
   const activePage = ["my-proposals", "pre-review", "audit-list"].includes(page) ? "lifecycle" : page;
-  const [workspace, setWorkspace] = useState<"user" | "monitor" | "h5-scenes">(
-    monitorPages.has(activePage as never) ? "monitor" : dingtalkScenePages.has(activePage as never) ? "h5-scenes" : "user",
+  const [workspace, setWorkspace] = useState<"user" | "monitor" | "digital-home" | "h5-scenes">(
+    monitorPages.has(activePage as never) ? "monitor" : digitalHomePages.has(activePage as never) ? "digital-home" : dingtalkScenePages.has(activePage as never) ? "h5-scenes" : "user",
   );
   useEffect(() => {
-    const nextWorkspace = monitorPages.has(activePage as never) ? "monitor" : dingtalkScenePages.has(activePage as never) ? "h5-scenes" : "user";
+    const nextWorkspace = monitorPages.has(activePage as never) ? "monitor" : digitalHomePages.has(activePage as never) ? "digital-home" : dingtalkScenePages.has(activePage as never) ? "h5-scenes" : "user";
     setWorkspace((current) => current === nextWorkspace ? current : nextWorkspace);
   }, [activePage]);
   const [items, setItems] = useState([...original, ...organizeDemoItems, ...deliberationDemoItems]);
@@ -3870,12 +3880,13 @@ function App() {
     setToast(s);
     setTimeout(() => setToast(""), 3200);
   };
-  const switchWorkspace = (next: "user" | "monitor" | "h5-scenes") => {
+  const switchWorkspace = (next: "user" | "monitor" | "digital-home" | "h5-scenes") => {
     setWorkspace(next);
-    const pages = next === "user" ? userPages : next === "monitor" ? monitorPages : dingtalkScenePages;
+    const pages = next === "user" ? userPages : next === "monitor" ? monitorPages : next === "digital-home" ? digitalHomePages : dingtalkScenePages;
     if (!pages.has(page as never)) {
       if (next === "user") setPage("lifecycle");
       else if (next === "monitor") setPage("digital-employee-flow");
+      else if (next === "digital-home") setPage("digital-employee-home");
       else setPage("dingtalk-h5-scenes");
     }
   };
@@ -3944,6 +3955,8 @@ function App() {
   else if (activePage === "task-breakdown") content = <TaskBreakdownPage items={items} onDetail={setDetail} onFlow={(kind, p) => setTaskFlow({ kind, p })} onProgress={setTaskProgress} />;
   else if (activePage === "execution-tracking") content = <ExecutionTracking items={items} onOpen={setExecutionDetail} onReview={setExecutionReview} onArchive={setExecutionArchive} />;
   else if (activePage === "digital-employee-flow") content = <DigitalEmployeeFlow notice={notice} items={items} />;
+  else if (activePage === "digital-employee-home") content = <DigitalEmployeeHome onOpen={(target) => switchWorkspace(target)} />;
+  else if (activePage === "digital-employee-home") content = <DigitalEmployeeHome onOpen={(target) => switchWorkspace(target)} />;
   else if (activePage === "dingtalk-h5-scenes") content = <DingtalkH5Scenes notice={notice} />;
   else if (activePage === "skills")
     content = <Skills skills={skills} setSkills={setSkills} notice={notice} />;
