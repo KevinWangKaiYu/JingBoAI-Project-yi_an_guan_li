@@ -518,7 +518,6 @@ function Shell({
     ["企业知识库", NotebookTabs],
     ["设置", Settings],
   ] as const;
-  const digitalExpanded = workspace === "user" || workspace === "h5-scenes";
   return (
     <div className="pam-app">
       <header className="pam-head">
@@ -540,11 +539,11 @@ function Shell({
             </button>
           ) : i === 2 ? (
             <div className="pam-digital-group" key={n}>
-              <button className={digitalExpanded ? "active" : ""} onClick={() => setWorkspace("user")}>
+              <button className={(workspace === "user" || workspace === "h5-scenes") ? "active" : ""} onClick={() => setWorkspace("user")}>
                 <I size={21} />
                 <span>{n}</span>
               </button>
-              {digitalExpanded && <div className="pam-digital-subnav" aria-label="数字员工模块">
+              {(workspace === "user" || workspace === "h5-scenes") && <div className="pam-digital-subnav" aria-label="数字员工模块">
                 <button className={workspace === "user" ? "selected" : ""} onClick={() => setWorkspace("user")}>议案智能管理<br/>用户端</button>
                 <button className={workspace === "h5-scenes" ? "selected" : ""} onClick={() => setWorkspace("h5-scenes")}>钉钉 H5<br/>交互场景</button>
               </div>}
