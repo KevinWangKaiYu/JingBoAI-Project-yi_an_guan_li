@@ -958,7 +958,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   const [selectedNode, setSelectedNode] = useState<DigitalEmployeeNode | null>(null);
   const [selectedSubtask, setSelectedSubtask] = useState<string | null>(null);
   const [h5Operation, setH5Operation] = useState<string | null>(null);
-  const [jumpCue, setJumpCue] = useState<{ fromId: string | null; toId: string; subtaskKey?: string; token: number } | null>(null);
+  const [jumpCue, setJumpCue] = useState<{ fromId: string | null; fromSubtaskKey?: string; toId: string; subtaskKey?: string; token: number } | null>(null);
   const [drawerView, setDrawerView] = useState<"tasks" | "trace">("tasks");
   const [selectedTraceNode, setSelectedTraceNode] = useState<string | null>(null);
   const wheelVelocityRef = useRef({ x: 0, y: 0 });
@@ -1015,7 +1015,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
       if (wheelFrameRef.current !== null) cancelAnimationFrame(wheelFrameRef.current);
     };
   }, []);
-  const cueJump = (toId: string, subtaskKey?: string) => setJumpCue({ fromId: selectedNode?.id ?? null, toId, subtaskKey, token: Date.now() });
+  const cueJump = (toId: string, subtaskKey?: string) => setJumpCue({ fromId: selectedNode?.id ?? null, fromSubtaskKey: selectedSubtask ?? undefined, toId, subtaskKey, token: Date.now() });
   const moveToNode = (nodeId: string, message: string) => { cueJump(nodeId); setSelectedNode(digitalEmployeeNodes.find((node) => node.id === nodeId) ?? null); setSelectedSubtask(null); notice(message); };
   const advanceH5Operation = (operation: string | null) => {
     if (!selectedNode || !operation) { notice("钉钉内操作已提交，流程将继续处理"); return; }
@@ -1153,7 +1153,8 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
             const from = digitalEmployeeNodes.find((node) => node.id === jumpCue.fromId); const to = digitalEmployeeNodes.find((node) => node.id === jumpCue.toId);
             if (!from || !to) return null;
             const path = `M${from.x + 70} ${from.y + 35} C${from.x + 185} ${from.y + 35},${to.x - 115} ${to.y + 35},${to.x + 70} ${to.y + 35}`;
-            return <g className="bp-jump-route" key={`jump-${jumpCue.token}`}><path d={path} markerEnd="url(#bp-main-arrow)"/><circle r="4"><animateMotion dur="1.35s" repeatCount="1" path={path}/></circle></g>;
+            const midX = (from.x + to.x) / 2 + 70; const midY = (from.y + to.y) / 2 + 35;
+            return <g className="bp-jump-route" key={`jump-${jumpCue.token}`}><path className="bp-jump-route-glow" d={path}/><path className="bp-jump-route-core" d={path} markerEnd="url(#bp-main-arrow)"/><circle className="bp-jump-particle" r="5"><animateMotion dur="1.05s" repeatCount="2" path={path}/></circle><circle className="bp-jump-particle delayed" r="3.5"><animateMotion begin=".48s" dur="1.05s" repeatCount="2" path={path}/></circle><g className="bp-jump-label" transform={`translate(${midX} ${midY - 22})`}><rect x="-24" y="-9" width="48" height="18" rx="9"/><text textAnchor="middle" y="3">流程跳转</text></g></g>;
           })()}          <g className="bp-detail-flow" filter="url(#bp-glow)">
             {detailLinks.map((path) => <g key={path}><path d={path} markerEnd="url(#bp-down-arrow)"/><circle className="bp-moving-dot" r="2.1"><animateMotion dur="2.3s" repeatCount="indefinite" path={path} /></circle></g>)}
           </g>
@@ -1176,7 +1177,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   return <div className="bp-lane" style={{ left, top, width: right - left, height: bottom - top }} key={`${stage.lane}-${index}`} aria-label={`${stage.agentTitle}流程分区`} />;
 })}
         
-        {digitalEmployeeNodes.map((node, index) => <button type="button" className={`bp-node ${node.tone} ${selectedNode?.id === node.id ? "active" : ""} ${jumpCue?.toId === node.id ? "jump-target" : ""}`} style={{ left: node.x, top: node.y }} key={`${node.id}-${jumpCue?.toId === node.id ? jumpCue.token : "idle"}`} onClick={() => { setSelectedNode(node); setSelectedSubtask(null); setSelectedTraceNode(null); setDrawerView("tasks"); }}><em>二级节点 · {String(index + 1).padStart(2, "0")}</em><b>{node.title}</b></button>)}
+        {digitalEmployeeNodes.map((node, index) => <button type="button" className={`bp-node ${node.tone} ${selectedNode?.id === node.id ? "active" : ""} ${jumpCue?.toId === node.id ? "jump-target" : ""} ${jumpCue?.fromId === node.id ? "jump-source" : ""}`} style={{ left: node.x, top: node.y }} key={`${node.id}-${jumpCue?.toId === node.id ? jumpCue.token : "idle"}`} onClick={() => { setSelectedNode(node); setSelectedSubtask(null); setSelectedTraceNode(null); setDrawerView("tasks"); }}><em>二级节点 · {String(index + 1).padStart(2, "0")}</em><b>{node.title}</b></button>)}
       </div>
       <aside className="bp-tools" aria-label="画布视图控制"><button type="button" onClick={() => zoomBy(0.08)} aria-label="放大"><ZoomIn size={16}/></button><strong>{Math.round(zoom * 100)}%</strong><button type="button" onClick={() => zoomBy(-0.08)} aria-label="缩小"><ZoomOut size={16}/></button><i/><button type="button" onClick={resetView} aria-label="复位视图"><RotateCcw size={15}/></button></aside>
     </div>
@@ -1184,7 +1185,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
       <header><div><small>AGENT SUBTASKS</small><h2>{selectedNode.title}</h2><p>当前二级模块包含 {digitalEmployeeSubtasks[selectedNode.id].length} 项协同子任务</p></div><button type="button" onClick={() => setSelectedNode(null)} aria-label="关闭"><X size={23}/></button></header>
       <div className="bp-drawer-progress"><span>模块子任务</span><b>{digitalEmployeeSubtasks[selectedNode.id].length} 项</b><i><em style={{ width: "100%" }} /></i></div>
       <section className="bp-subtask-list">
-        {digitalEmployeeSubtasks[selectedNode.id].map((task, index) => { const taskKey = `${selectedNode.id}-${index}`; return <button type="button" className={`bp-subtask ${selectedSubtask === taskKey ? "active" : ""} ${jumpCue?.subtaskKey === taskKey ? "jump-target" : ""}`} key={`${taskKey}-${jumpCue?.subtaskKey === taskKey ? jumpCue.token : "idle"}`} onClick={() => { setSelectedSubtask(taskKey); if (task.h5Operation) setH5Operation(task.h5Operation); }}>
+        {digitalEmployeeSubtasks[selectedNode.id].map((task, index) => { const taskKey = `${selectedNode.id}-${index}`; return <button type="button" className={`bp-subtask ${selectedSubtask === taskKey ? "active" : ""} ${jumpCue?.subtaskKey === taskKey ? "jump-target" : ""} ${jumpCue?.fromSubtaskKey === taskKey ? "jump-source" : ""}`} key={`${taskKey}-${jumpCue?.subtaskKey === taskKey ? jumpCue.token : "idle"}`} onClick={() => { setSelectedSubtask(taskKey); if (task.h5Operation) setH5Operation(task.h5Operation); }}>
           <header><span>子任务 {String(index + 1).padStart(2, "0")}</span><em className={task.h5Operation ? "h5-action" : ""}>{task.h5Operation ? "钉钉内操作" : task.role}</em></header><b>{task.title}</b><p>{task.detail}</p>
         </button>; })}
       </section>
