@@ -532,34 +532,29 @@ function Shell({
         </div>
       </header>
       <div className="pam-body">
-        <aside className="pam-rail">
-          {rail.map(([n, I], i) => (
-            <button className={i === 2 ? "active" : ""} key={n}>
+        <aside className="pam-rail pam-rail-soft">
+          {rail.map(([n, I], i) => i === 2 ? (
+            <div className="pam-digital-group" key={n}>
+              <button className="active" onClick={() => setWorkspace("monitor")}>
+                <I size={21} />
+                <span>{n}</span>
+              </button>
+              <div className="pam-digital-subnav" aria-label="数字员工模块">
+                <button className={workspace === "monitor" ? "selected" : ""} onClick={() => setWorkspace("monitor")}>流程监控</button>
+                <button className={workspace === "user" ? "selected" : ""} onClick={() => setWorkspace("user")}>议案智能管理用户端</button>
+                <button className={workspace === "h5-scenes" ? "selected" : ""} onClick={() => setWorkspace("h5-scenes")}>钉钉 H5 交互场景</button>
+              </div>
+            </div>
+          ) : (
+            <button key={n}>
               <I size={21} />
               <span>{n}</span>
             </button>
           ))}
         </aside>
         <main className="pam-work">
-          <div className="pam-top-tabs">
-            <button
-              className={`workspace-tab ${workspace === "user" ? "active" : ""}`}
-              onClick={() => setWorkspace("user")}
-            >
-              议案智能管理用户端
-            </button>
-            <button
-              className={`workspace-tab ${workspace === "monitor" ? "active" : ""}`}
-              onClick={() => setWorkspace("monitor")}
-            >
-              议案数字员工流程监控
-            </button>
-            <button
-              className={`workspace-tab ${workspace === "h5-scenes" ? "active" : ""}`}
-              onClick={() => setWorkspace("h5-scenes")}
-            >
-              钉钉 H5 交互场景
-            </button>
+          <div className="pam-context-bar">
+            <span>数字员工</span><i>/</i><b>{workspace === "monitor" ? "议案数字员工流程监控" : workspace === "user" ? "议案智能管理用户端" : "钉钉 H5 交互场景"}</b>
           </div>
           <section className={`pam-frame ${workspace === "monitor" ? "monitor-frame" : ""} ${workspace === "h5-scenes" ? "h5-scenes-frame" : ""}`}>
             {workspace === "user" && <aside className="pam-menu">
