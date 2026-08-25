@@ -958,6 +958,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   const [selectedNode, setSelectedNode] = useState<DigitalEmployeeNode | null>(null);
   const [selectedSubtask, setSelectedSubtask] = useState<string | null>(null);
   const [h5Operation, setH5Operation] = useState<string | null>(null);
+  const [jumpCue, setJumpCue] = useState<{ fromId: string | null; toId: string; subtaskKey?: string; token: number } | null>(null);
   const [drawerView, setDrawerView] = useState<"tasks" | "trace">("tasks");
   const [selectedTraceNode, setSelectedTraceNode] = useState<string | null>(null);
   const wheelVelocityRef = useRef({ x: 0, y: 0 });
@@ -968,6 +969,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   const crossLinks: string[] = [];
   // 一级智能体之间仅保留参考图中的阶段串联；二级模块不增加额外跳线。
   const secondaryBypassLinks: string[] = [];
+  useEffect(() => { if (!jumpCue) return; const timer = window.setTimeout(() => setJumpCue(null), 2500); return () => window.clearTimeout(timer); }, [jumpCue]);
   useEffect(() => {
     const fit = () => {
       const rect = viewportRef.current?.getBoundingClientRect();
@@ -1013,12 +1015,13 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
       if (wheelFrameRef.current !== null) cancelAnimationFrame(wheelFrameRef.current);
     };
   }, []);
-  const moveToNode = (nodeId: string, message: string) => { setSelectedNode(digitalEmployeeNodes.find((node) => node.id === nodeId) ?? null); setSelectedSubtask(null); notice(message); };
+  const cueJump = (toId: string, subtaskKey?: string) => setJumpCue({ fromId: selectedNode?.id ?? null, toId, subtaskKey, token: Date.now() });
+  const moveToNode = (nodeId: string, message: string) => { cueJump(nodeId); setSelectedNode(digitalEmployeeNodes.find((node) => node.id === nodeId) ?? null); setSelectedSubtask(null); notice(message); };
   const advanceH5Operation = (operation: string | null) => {
     if (!selectedNode || !operation) { notice("钉钉内操作已提交，流程将继续处理"); return; }
     const tasks = digitalEmployeeSubtasks[selectedNode.id];
     const taskIndex = tasks.findIndex((task) => task.h5Operation === operation);
-    if (taskIndex >= 0 && taskIndex < tasks.length - 1) { setSelectedSubtask(`${selectedNode.id}-${taskIndex + 1}`); notice("钉钉内操作已提交，已进入下一子任务"); return; }
+    if (taskIndex >= 0 && taskIndex < tasks.length - 1) { const nextTaskKey = `${selectedNode.id}-${taskIndex + 1}`; cueJump(selectedNode.id, nextTaskKey); setSelectedSubtask(nextTaskKey); notice("钉钉内操作已提交，已进入下一子任务"); return; }
     const nodeIndex = digitalEmployeeNodes.findIndex((node) => node.id === selectedNode.id);
     const nextNode = digitalEmployeeNodes[nodeIndex + 1];
     if (nextNode) { moveToNode(nextNode.id, "钉钉内操作已提交，已进入下一二级节点"); return; }
@@ -1027,7 +1030,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   const completeH5Operation = () => {
     const operation = h5Operation;
     setH5Operation(null);
-    if (operation === "application") { setSelectedSubtask("03-1"); notice("议案申请已提交，已进入子任务 02：调用工具收集议案"); return; }
+    if (operation === "application") { cueJump("03", "03-1"); setSelectedSubtask("03-1"); notice("议案申请已提交，已进入子任务 02：调用工具收集议案"); return; }
     if (operation === "basic-review") { moveToNode("07", "基础审核已通过，已进入职能审核"); return; }
     if (operation === "functional-review") { moveToNode("08", "职能审核已通过，已进入战执委审核"); return; }
     if (operation === "executive-review") { moveToNode("12", "战执委审核已通过，已进入基础信息收集"); return; }
@@ -1037,9 +1040,9 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   const rejectH5Operation = () => {
     const operation = h5Operation;
     setH5Operation(null);
-    if (operation === "basic-review") { setSelectedSubtask("06-5"); notice("基础审核已驳回，已进入整理驳回信息"); return; }
-    if (operation === "functional-review") { setSelectedSubtask("07-5"); notice("职能审核已驳回，已进入整理驳回信息"); return; }
-    if (operation === "executive-review") { setSelectedSubtask("08-5"); notice("战执委审核已驳回，已进入整理驳回信息"); return; }
+    if (operation === "basic-review") { cueJump("06", "06-5"); setSelectedSubtask("06-5"); notice("基础审核已驳回，已进入整理驳回信息"); return; }
+    if (operation === "functional-review") { cueJump("07", "07-5"); setSelectedSubtask("07-5"); notice("职能审核已驳回，已进入整理驳回信息"); return; }
+    if (operation === "executive-review") { cueJump("08", "08-5"); setSelectedSubtask("08-5"); notice("战执委审核已驳回，已进入整理驳回信息"); return; }
     notice("钉钉内操作已驳回，流程将继续处理");
   };
   const resetView = () => { setZoom(fitZoom); setPan({ x: 0, y: 0 }); };
@@ -1146,7 +1149,12 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
               return <g key={stage.title}><path d={leftRail}/><path d={rightRail}/>{moduleLinks.map(({ path, inbound }) => <path d={path} markerEnd={inbound ? "url(#bp-down-arrow)" : undefined} key={path}/>)}</g>;
             })}
           </g>
-          <g className="bp-detail-flow" filter="url(#bp-glow)">
+          {jumpCue?.fromId && jumpCue.fromId !== jumpCue.toId && (() => {
+            const from = digitalEmployeeNodes.find((node) => node.id === jumpCue.fromId); const to = digitalEmployeeNodes.find((node) => node.id === jumpCue.toId);
+            if (!from || !to) return null;
+            const path = `M${from.x + 70} ${from.y + 35} C${from.x + 185} ${from.y + 35},${to.x - 115} ${to.y + 35},${to.x + 70} ${to.y + 35}`;
+            return <g className="bp-jump-route" key={`jump-${jumpCue.token}`}><path d={path} markerEnd="url(#bp-main-arrow)"/><circle r="4"><animateMotion dur="1.35s" repeatCount="1" path={path}/></circle></g>;
+          })()}          <g className="bp-detail-flow" filter="url(#bp-glow)">
             {detailLinks.map((path) => <g key={path}><path d={path} markerEnd="url(#bp-down-arrow)"/><circle className="bp-moving-dot" r="2.1"><animateMotion dur="2.3s" repeatCount="indefinite" path={path} /></circle></g>)}
           </g>
           <g className="bp-cross-flow" filter="url(#bp-glow)">
@@ -1168,7 +1176,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
   return <div className="bp-lane" style={{ left, top, width: right - left, height: bottom - top }} key={`${stage.lane}-${index}`} aria-label={`${stage.agentTitle}流程分区`} />;
 })}
         
-        {digitalEmployeeNodes.map((node, index) => <button type="button" className={`bp-node ${node.tone} ${selectedNode?.id === node.id ? "active" : ""}`} style={{ left: node.x, top: node.y }} key={node.id} onClick={() => { setSelectedNode(node); setSelectedSubtask(null); setSelectedTraceNode(null); setDrawerView("tasks"); }}><em>二级节点 · {String(index + 1).padStart(2, "0")}</em><b>{node.title}</b></button>)}
+        {digitalEmployeeNodes.map((node, index) => <button type="button" className={`bp-node ${node.tone} ${selectedNode?.id === node.id ? "active" : ""} ${jumpCue?.toId === node.id ? "jump-target" : ""}`} style={{ left: node.x, top: node.y }} key={`${node.id}-${jumpCue?.toId === node.id ? jumpCue.token : "idle"}`} onClick={() => { setSelectedNode(node); setSelectedSubtask(null); setSelectedTraceNode(null); setDrawerView("tasks"); }}><em>二级节点 · {String(index + 1).padStart(2, "0")}</em><b>{node.title}</b></button>)}
       </div>
       <aside className="bp-tools" aria-label="画布视图控制"><button type="button" onClick={() => zoomBy(0.08)} aria-label="放大"><ZoomIn size={16}/></button><strong>{Math.round(zoom * 100)}%</strong><button type="button" onClick={() => zoomBy(-0.08)} aria-label="缩小"><ZoomOut size={16}/></button><i/><button type="button" onClick={resetView} aria-label="复位视图"><RotateCcw size={15}/></button></aside>
     </div>
@@ -1176,7 +1184,7 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
       <header><div><small>AGENT SUBTASKS</small><h2>{selectedNode.title}</h2><p>当前二级模块包含 {digitalEmployeeSubtasks[selectedNode.id].length} 项协同子任务</p></div><button type="button" onClick={() => setSelectedNode(null)} aria-label="关闭"><X size={23}/></button></header>
       <div className="bp-drawer-progress"><span>模块子任务</span><b>{digitalEmployeeSubtasks[selectedNode.id].length} 项</b><i><em style={{ width: "100%" }} /></i></div>
       <section className="bp-subtask-list">
-        {digitalEmployeeSubtasks[selectedNode.id].map((task, index) => { const taskKey = `${selectedNode.id}-${index}`; return <button type="button" className={`bp-subtask ${selectedSubtask === taskKey ? "active" : ""}`} key={taskKey} onClick={() => { setSelectedSubtask(taskKey); if (task.h5Operation) setH5Operation(task.h5Operation); }}>
+        {digitalEmployeeSubtasks[selectedNode.id].map((task, index) => { const taskKey = `${selectedNode.id}-${index}`; return <button type="button" className={`bp-subtask ${selectedSubtask === taskKey ? "active" : ""} ${jumpCue?.subtaskKey === taskKey ? "jump-target" : ""}`} key={`${taskKey}-${jumpCue?.subtaskKey === taskKey ? jumpCue.token : "idle"}`} onClick={() => { setSelectedSubtask(taskKey); if (task.h5Operation) setH5Operation(task.h5Operation); }}>
           <header><span>子任务 {String(index + 1).padStart(2, "0")}</span><em className={task.h5Operation ? "h5-action" : ""}>{task.h5Operation ? "钉钉内操作" : task.role}</em></header><b>{task.title}</b><p>{task.detail}</p>
         </button>; })}
       </section>
