@@ -1013,7 +1013,35 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
       if (wheelFrameRef.current !== null) cancelAnimationFrame(wheelFrameRef.current);
     };
   }, []);
-  const completeH5Operation = () => { const operation = h5Operation; setH5Operation(null); if (operation === "application") { setSelectedSubtask("03-2"); notice("议案申请已提交，已进入自动编码"); return; } notice("钉钉内操作已提交，流程将继续处理"); };
+  const moveToNode = (nodeId: string, message: string) => { setSelectedNode(digitalEmployeeNodes.find((node) => node.id === nodeId) ?? null); setSelectedSubtask(null); notice(message); };
+  const advanceH5Operation = (operation: string | null) => {
+    if (!selectedNode || !operation) { notice("钉钉内操作已提交，流程将继续处理"); return; }
+    const tasks = digitalEmployeeSubtasks[selectedNode.id];
+    const taskIndex = tasks.findIndex((task) => task.h5Operation === operation);
+    if (taskIndex >= 0 && taskIndex < tasks.length - 1) { setSelectedSubtask(`${selectedNode.id}-${taskIndex + 1}`); notice("钉钉内操作已提交，已进入下一子任务"); return; }
+    const nodeIndex = digitalEmployeeNodes.findIndex((node) => node.id === selectedNode.id);
+    const nextNode = digitalEmployeeNodes[nodeIndex + 1];
+    if (nextNode) { moveToNode(nextNode.id, "钉钉内操作已提交，已进入下一二级节点"); return; }
+    notice("钉钉内操作已提交，流程已完成");
+  };
+  const completeH5Operation = () => {
+    const operation = h5Operation;
+    setH5Operation(null);
+    if (operation === "application") { setSelectedSubtask("03-1"); notice("议案申请已提交，已进入子任务 02：调用工具收集议案"); return; }
+    if (operation === "basic-review") { moveToNode("07", "基础审核已通过，已进入职能审核"); return; }
+    if (operation === "functional-review") { moveToNode("08", "职能审核已通过，已进入战执委审核"); return; }
+    if (operation === "executive-review") { moveToNode("12", "战执委审核已通过，已进入基础信息收集"); return; }
+    if (["basic-revision", "functional-revision", "executive-revision"].includes(operation ?? "")) { moveToNode("04", "修改材料已提交，已进入议案类型判断"); return; }
+    advanceH5Operation(operation);
+  };
+  const rejectH5Operation = () => {
+    const operation = h5Operation;
+    setH5Operation(null);
+    if (operation === "basic-review") { setSelectedSubtask("06-5"); notice("基础审核已驳回，已进入整理驳回信息"); return; }
+    if (operation === "functional-review") { setSelectedSubtask("07-5"); notice("职能审核已驳回，已进入整理驳回信息"); return; }
+    if (operation === "executive-review") { setSelectedSubtask("08-5"); notice("战执委审核已驳回，已进入整理驳回信息"); return; }
+    notice("钉钉内操作已驳回，流程将继续处理");
+  };
   const resetView = () => { setZoom(fitZoom); setPan({ x: 0, y: 0 }); };
   const zoomBy = (delta: number) => setZoom((value) => Math.max(0.42, Math.min(1.18, Number((value + delta).toFixed(2)))));
   const startDrag = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1155,11 +1183,11 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
     </aside>}
     <div className="bp-h5-operation">
       {h5Operation === "application" && <ProposalApplicationDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
-      {h5Operation === "basic-review" && <ProposalReviewDrawer mode="basic" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "basic-review" && <ProposalReviewDrawer mode="basic" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} onReject={rejectH5Operation} />}
       {h5Operation === "basic-revision" && <ProposalReviewDrawer mode="revision" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
-      {h5Operation === "functional-review" && <ProposalReviewDrawer mode="functional" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "functional-review" && <ProposalReviewDrawer mode="functional" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} onReject={rejectH5Operation} />}
       {h5Operation === "functional-revision" && <ProposalReviewDrawer mode="functional-revision" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
-      {h5Operation === "executive-review" && <ProposalReviewDrawer mode="executive" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
+      {h5Operation === "executive-review" && <ProposalReviewDrawer mode="executive" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} onReject={rejectH5Operation} />}
       {h5Operation === "executive-revision" && <ProposalReviewDrawer mode="executive-revision" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
       {h5Operation === "deliberation-info" && <DeliberationInfoDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
       {h5Operation === "deliberation-material" && <DeliberationMaterialDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
