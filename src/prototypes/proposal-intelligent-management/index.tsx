@@ -1026,9 +1026,11 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
     };
   }, []);
   const cueJump = (toId: string, subtaskKey?: string) => {
-    const source = selectedSubtask ? subtaskElementRefs.current.get(selectedSubtask) : selectedNode ? nodeElementRefs.current.get(selectedNode.id) : undefined;
+    // 目标为二级节点时，两端都使用二级节点框；仅子任务内部跳转才从子任务卡片出发。
+    const useSubtaskEndpoint = Boolean(subtaskKey && selectedSubtask);
+    const source = useSubtaskEndpoint ? subtaskElementRefs.current.get(selectedSubtask!) : selectedNode ? nodeElementRefs.current.get(selectedNode.id) : undefined;
     const rect = source?.getBoundingClientRect() ?? { x: window.innerWidth / 2 - 70, y: window.innerHeight / 2 - 35, width: 140, height: 70 };
-    setJumpCue({ fromId: selectedNode?.id ?? null, fromSubtaskKey: selectedSubtask ?? undefined, toId, subtaskKey, fromRect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, token: Date.now() });
+    setJumpCue({ fromId: selectedNode?.id ?? null, fromSubtaskKey: useSubtaskEndpoint ? selectedSubtask ?? undefined : undefined, toId, subtaskKey, fromRect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, token: Date.now() });
   };
   const moveToNode = (nodeId: string, message: string) => { cueJump(nodeId); setSelectedNode(digitalEmployeeNodes.find((node) => node.id === nodeId) ?? null); setSelectedSubtask(null); notice(message); };
   const advanceH5Operation = (operation: string | null) => {
