@@ -512,13 +512,13 @@ function Shell({
   children: React.ReactNode;
 }) {
   const rail = [
-    ["Chat", MessageSquareMore],
-    ["旺财", Bot],
-    ["页面", NotebookTabs],
-    ["工具", Grid2X2],
-    ["个人知识", Lightbulb],
+    ["LTC", LayoutList],
+    ["AI 对话", MessageSquareMore],
+    ["数字员工", Bot],
+    ["企业知识库", NotebookTabs],
     ["设置", Settings],
   ] as const;
+  const digitalExpanded = workspace === "user" || workspace === "h5-scenes";
   return (
     <div className="pam-app">
       <header className="pam-head">
@@ -533,17 +533,21 @@ function Shell({
       </header>
       <div className="pam-body">
         <aside className="pam-rail pam-rail-soft">
-          {rail.map(([n, I], i) => i === 2 ? (
+          {rail.map(([n, I], i) => i === 0 ? (
+            <button className={workspace === "monitor" ? "active" : ""} onClick={() => setWorkspace("monitor")} key={n}>
+              <I size={21} />
+              <span>{n}</span>
+            </button>
+          ) : i === 2 ? (
             <div className="pam-digital-group" key={n}>
-              <button className="active" onClick={() => setWorkspace("monitor")}>
+              <button className={digitalExpanded ? "active" : ""} onClick={() => setWorkspace("user")}>
                 <I size={21} />
                 <span>{n}</span>
               </button>
-              <div className="pam-digital-subnav" aria-label="数字员工模块">
-                <button className={workspace === "monitor" ? "selected" : ""} onClick={() => setWorkspace("monitor")}>流程监控</button>
-                <button className={workspace === "user" ? "selected" : ""} onClick={() => setWorkspace("user")}>议案智能管理用户端</button>
-                <button className={workspace === "h5-scenes" ? "selected" : ""} onClick={() => setWorkspace("h5-scenes")}>钉钉 H5 交互场景</button>
-              </div>
+              {digitalExpanded && <div className="pam-digital-subnav" aria-label="数字员工模块">
+                <button className={workspace === "user" ? "selected" : ""} onClick={() => setWorkspace("user")}>议案智能管理<br/>用户端</button>
+                <button className={workspace === "h5-scenes" ? "selected" : ""} onClick={() => setWorkspace("h5-scenes")}>钉钉 H5<br/>交互场景</button>
+              </div>}
             </div>
           ) : (
             <button key={n}>
@@ -553,9 +557,13 @@ function Shell({
           ))}
         </aside>
         <main className="pam-work">
-          <div className="pam-context-bar">
-            <span>数字员工</span><i>/</i><b>{workspace === "monitor" ? "议案数字员工流程监控" : workspace === "user" ? "议案智能管理用户端" : "钉钉 H5 交互场景"}</b>
-          </div>
+          {workspace === "monitor" ? <>
+            <header className="pam-ltc-head">
+              <div><small>LTC · BUSINESS LIFECYCLE CONTROL</small><h1>全业务经营闭环中心 · 全要素流动版</h1></div>
+              <section aria-label="流程统计"><span><b>6</b>一级主流程</span><span><b>33</b>二级业务流程</span><span><b>87</b>三级任务</span></section>
+            </header>
+            <div className="pam-ltc-legend"><span>状态图例</span><i className="done">已完成</i><i className="running">运行中</i><i className="risk">风险提示</i><i className="danger">高风险</i><i className="timeout">已超时</i><i className="waiting">等待中</i></div>
+          </> : <div className="pam-context-bar"><span>数字员工</span><i>/</i><b>{workspace === "user" ? "议案智能管理用户端" : "钉钉 H5 交互场景"}</b></div>}
           <section className={`pam-frame ${workspace === "monitor" ? "monitor-frame" : ""} ${workspace === "h5-scenes" ? "h5-scenes-frame" : ""}`}>
             {workspace === "user" && <aside className="pam-menu">
               {userMenu.map(([id, n, I]) => (
