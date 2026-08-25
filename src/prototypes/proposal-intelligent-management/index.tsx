@@ -962,6 +962,7 @@ function DigitalEmployeeFlow({ notice, items }: { notice: (s: string) => void; i
   const [jumpFrame, setJumpFrame] = useState<{ from: { x: number; y: number; width: number; height: number }; to: { x: number; y: number; width: number; height: number }; token: number } | null>(null);
   const [drawerView, setDrawerView] = useState<"tasks" | "trace">("tasks");
   const [selectedTraceNode, setSelectedTraceNode] = useState<string | null>(null);
+  const [documentPreview, setDocumentPreview] = useState<string | null>(null);
   const [monitorQuery, setMonitorQuery] = useState("");
   const [trackedProposal, setTrackedProposal] = useState<Proposal | null>(null);
   const activeMonitorItems = items.filter((item) => item.executionStatus !== "已归档" && item.lifecycleStatus !== "已归档");
@@ -1079,6 +1080,24 @@ function DigitalEmployeeFlow({ notice, items }: { notice: (s: string) => void; i
     setDrag({ x: event.clientX, y: event.clientY, originX: pan.x, originY: pan.y });
   };
   const nodeData = selectedTraceNode ? (() => {
+    const isFunctionalAdvice = selectedTraceNode.includes("职能审核 · 生成职能审核建议");
+    if (isFunctionalAdvice) {
+      return {
+        normal: [
+          { key: "议案编号", type: "text", value: "tk-27013568943" },
+          { key: "议案名称", type: "text", value: "关于《山东邦维信息对部分高管任命》的议案" },
+          { key: "申请部门", type: "text", value: "人力资源部门" },
+          { key: "申请人", type: "text", value: "张颖" },
+          { key: "议案申请", type: "file", value: "山东邦维信息科技有限公司部分高级管理人员任职调整议案.docx · 128 KB" },
+        ],
+        changed: [
+          { key: "申请表修改", type: "text", value: "议案名称由“高级管理人员任职调整议案”调整为“关于山东邦维信息科技有限公司部分高级管理人员任职调整的议案”；补充议案负责人“宋照晨”及执委会所属权限“战执委审议”。" },
+          { key: "申请模板补充与修订", type: "text", value: "补充张磊同志拟任副总经理、原任总经理及 2026 年 09 月 01 日生效安排；同步完善任职调整依据和考察情况说明。" },
+          { key: "附件材料补充", type: "text", value: "新增《任职调整依据说明.pdf》；更新《任职调整说明_v2.docx》；补充《干部履历及考察材料.pdf》。" },
+        ],
+        skills: ["内容修改对比skill"], mcps: [],
+      };
+    }
     const has = (...words: string[]) => words.some((word) => selectedTraceNode.includes(word));
     const normal = [
       { key: "议案申请表", type: "file", value: "技术改造项目议案申请表.docx · 64 KB" },
@@ -1091,66 +1110,15 @@ function DigitalEmployeeFlow({ notice, items }: { notice: (s: string) => void; i
       { key: "议案负责人", type: "text", value: "赵璇" },
     ];
     const changed = [
-      ...(has("开始") ? [{ key: "议案状态", type: "text", value: "已启动议案收集流程" }] : []),
-      ...(has("卓越议案收集") ? [{ key: "来源信息", type: "text", value: "卓越议案平台提报，材料已接收" }, { key: "议案状态", type: "text", value: "待材料汇集" }] : []),
-      ...(has("门户议案收集") ? [{ key: "来源信息", type: "text", value: "企业门户提报，申请信息已同步" }, { key: "议案状态", type: "text", value: "待材料汇集" }] : []),
-      ...(has("钉钉议案收集") ? [{ key: "来源信息", type: "text", value: "钉钉工作台提报，附件已归集" }, { key: "议案状态", type: "text", value: "待材料汇集" }] : []),
-      ...(has("钉钉修改回传") ? [{ key: "议案申请附件", type: "file", value: "技术改造项目补充材料_v2.zip · 1.8 MB" }, { key: "议案状态", type: "text", value: "修改材料已回传" }] : []),
-      ...(has("议案类型判定") ? [{ key: "审议基础信息", type: "text", value: "已判定为经营决策类议案，匹配对应审议模板与审核路径。" }] : []),
-      ...(has("修改信息") ? [
-        { key: "审议基础信息", type: "text", value: "审议方式更新为“线上投票”；已补充审议时间：2026-08-20 14:30。" },
-        { key: "领导建议", type: "text", value: "已补充关键指标测算与执行风险闭环方案，按修改范围路由至对应审核环节。" },
-      ] : []),
-      ...(has("基础性规则匹配") ? [{ key: "审议基础信息", type: "text", value: "基础规则匹配完成，材料完整性与必填项校验通过。" }, { key: "领导建议", type: "text", value: "建议进入职能预审，重点关注实施计划的可执行性。" }] : []),
-      ...(has("基础性驳回") ? [{ key: "领导建议", type: "text", value: "退回补充预算测算依据及实施边界说明。" }, { key: "议案状态", type: "text", value: "基础审核驳回修改" }] : []),
-      ...(has("基础审核负责人判断") ? [{ key: "审议负责人", type: "text", value: "基础审核负责人：周敏，审核意见已确认。" }] : []),
-      ...(has("生成基础审核建议") ? [{ key: "基础审核建议", type: "text", value: "材料完整性检查完成，已生成可编辑的基础审核建议。" }, { key: "审核通知", type: "text", value: "基础审核通知待通过议案机器人推送。" }] : []),
-      ...(has("生成职能审核建议") ? [{ key: "职能审核建议", type: "text", value: "已根据职能检查结果生成岗位职责、制度依据与风险提示建议。" }, { key: "审核通知", type: "text", value: "职能审核建议待推送至对应负责人。" }] : []),
-      ...(has("生成战执委审核建议") ? [{ key: "战执委审核建议", type: "text", value: "已汇总决策边界、授权依据与组织影响，形成战执委审核建议。" }, { key: "审核通知", type: "text", value: "战执委审核通知待推送至负责人。" }] : []),      ...(has("职能相关规则") ? [{ key: "审议基础信息", type: "text", value: "职能规则校验完成，已匹配预算、制度及专业风险口径。" }, { key: "领导建议", type: "text", value: "建议进入战执委审核，补充跨部门协同计划。" }] : []),
-      ...(has("职能驳回") ? [{ key: "领导建议", type: "text", value: "需补充专业评估结论与责任分工后重新提交。" }, { key: "议案状态", type: "text", value: "职能预审驳回修改" }] : []),
-      ...(has("职能预审负责人判断") ? [{ key: "审议负责人", type: "text", value: "职能预审负责人：李晨，预审结论已确认。" }] : []),
-      ...(has("战执委相关规则") ? [{ key: "审议基础信息", type: "text", value: "战执委审核规则匹配完成，决策边界与关键风险已核验。" }, { key: "领导建议", type: "text", value: "建议形成审议材料并进入正式审议流程。" }] : []),
-      ...(has("战执委驳回") ? [{ key: "领导建议", type: "text", value: "请补充关键指标敏感性分析与风险闭环措施。" }, { key: "议案状态", type: "text", value: "战执委审核驳回修改" }] : []),
-      ...(has("战执委负责人判断") ? [{ key: "审议负责人", type: "text", value: "战执委审核负责人：陈颖，审核结论已确认。" }] : []),
-      ...(has("审议负责人") ? [{ key: "审议负责人", type: "text", value: "赵璇（已确认）" }] : []),
-      ...(has("审议材料", "生成审议材料") ? [{ key: "审议基础信息", type: "text", value: "审议时间：2026-08-20 14:30；审议方式：线上投票" }, { key: "审议表决话术", type: "text", value: "请各委员依据议案材料、风险说明及补充意见进行表决。" }] : []),
-      ...(has("审议监控", "投票") ? [{ key: "投票信息", type: "text", value: "已投 5 / 8 人；当前意见：同意 4 票、待确认 3 人" }] : []),
-      ...(has("生成审议公告") ? [{ key: "审议公告", type: "text", value: "《技术改造项目议案审议结果公告》" }, { key: "公告状态", type: "text", value: "待议案负责人确认" }] : []),
-      ...(has("生成决议文件") ? [{ key: "决议文件", type: "file", value: "2026-001_审议决议文件.docx · 128 KB" }, { key: "决议状态", type: "text", value: "待审议负责人确认" }, { key: "决议审批意见", type: "text", value: "同意按审议结论形成正式决议。" }] : []),
-      ...(has("生成指令") ? [{ key: "指令", type: "file", value: "2026-001_执行指令.pdf · 86 KB" }, { key: "指令状态", type: "text", value: "待审议负责人确认" }] : []),
-      ...(has("负责人判断") ? [{ key: "领导建议", type: "text", value: "补充投资回收期测算依据后进入下一环节。" }] : []),
-      ...(has("决议文件接收") ? [{ key: "决议文件", type: "file", value: "2026-001_审议决议文件.docx · 128 KB" }, { key: "决议状态", type: "text", value: "已接收，待审批" }] : []),
-      ...(has("向上审批") ? [{ key: "决议审批意见", type: "text", value: "已提交上级审批，待审批意见回写。" }, { key: "决议状态", type: "text", value: "审批中" }] : []),
-      ...(has("横向路由") ? [{ key: "决议执行负责人", type: "text", value: "已通知相关协同部门，并同步指定执行负责人。" }] : []),
-      ...(has("向下路由") ? [{ key: "指令状态", type: "text", value: "执行指令已下发至责任部门。" }] : []),
-      ...(has("决议文件备案") ? [{ key: "决议文件", type: "file", value: "2026-001_审议决议文件_已备案.docx · 128 KB" }, { key: "决议状态", type: "text", value: "已完成备案" }] : []),
-      ...(has("通知发起部门") ? [{ key: "决议执行负责人", type: "text", value: "李晨 · 战略发展部，已确认接收执行任务。" }] : []),
-      ...(has("执行结果分析") ? [{ key: "议案执行结果分析", type: "text", value: "计划节点完成率 68%，关键风险已闭环，建议持续跟踪验证材料。" }] : []),
-      ...(has("执行监听") ? [{ key: "决议执行负责人", type: "text", value: "李晨 · 战略发展部" }, { key: "议案状态", type: "text", value: "执行中，已建立节点监听" }] : []),
-      ...(has("议案负责人确认") ? [{ key: "议案执行结果分析", type: "text", value: "议案负责人已确认执行结果及后续跟踪事项。" }] : []),
-      ...(has("归档负责人确认") ? [{ key: "议案归档材料", type: "file", value: "2026-001_待归档材料清单.xlsx · 42 KB" }] : []),
-      ...(has("执行归档") ? [{ key: "议案归档材料", type: "file", value: "2026-001_议案归档材料.zip · 5.6 MB" }, { key: "议案状态", type: "text", value: "已归档" }] : []),
-      ...(has("结束") ? [{ key: "议案状态", type: "text", value: "流程已结束，记录已归档" }] : []),
+      ...(has("生成基础审核建议") ? [{ key: "基础审核建议", type: "text", value: "材料完整性检查完成，已生成可编辑的基础审核建议。" }] : []),
+      ...(has("生成职能审核建议") ? [{ key: "职能审核建议", type: "text", value: "已根据职能检查结果生成岗位职责、制度依据与风险提示建议。" }] : []),
+      ...(has("生成战执委审核建议") ? [{ key: "战执委审核建议", type: "text", value: "已汇总决策边界、授权依据与组织影响，形成战执委审核建议。" }] : []),
     ];
-    const skills = [
-      ...(has("基础审核") ? ["基础规则审核skill"] : []),
-      ...(has("职能预审", "职能审核") ? ["职能预审skill"] : []),
-      ...(has("战执委审核") ? ["战执委审核skill"] : []),
-      ...(has("审议公告") ? ["审议公告skill"] : []),
-      ...(has("审议材料", "决议文件") ? ["审议文件skill"] : []),
-      ...(has("指令") ? ["指令skill"] : []),
-      ...(has("执行结果分析") ? ["执行结果分析skill"] : []),
-    ];
-    const mcps = [
-      ...(has("议案收集", "议案信息整理", "议案类型") ? ["议案编号插件"] : []),
-      ...(has("决议", "路由通知") ? ["决议文件备案插件"] : []),
-      ...(has("归档") ? ["议案归档插件"] : []),
-    ];
-    return { normal, changed, skills, mcps };
-  })() : null;
-  const renderNodeRecord = (record: { key: string; type: string; value: string }, changed = false) => <div className={`bp-data-record ${record.type} ${changed ? "changed" : ""}`} key={record.key}><code>{record.key}</code>{record.type === "file" ? <div className="bp-data-file"><FileText size={16}/><div><b>{record.value.split(" · ")[0]}</b><small>{record.value.split(" · ")[1]}</small></div><i>↗</i></div> : <p>{record.value}</p>}</div>;
-  const nodeDataModal = selectedTraceNode && nodeData && <div className="bp-node-data-modal-backdrop" onClick={() => setSelectedTraceNode(null)}><section className="bp-node-data-modal" role="dialog" aria-modal="true" aria-label={`${selectedTraceNode} 节点详情`} onClick={(event) => event.stopPropagation()}><header><div><small>NODE BUSINESS DETAIL</small><h3>{selectedTraceNode}</h3><p>本节点仅展示发生变更的业务字段。</p></div><button type="button" onClick={() => setSelectedTraceNode(null)} aria-label="关闭详情"><X size={17}/></button></header><section><h4>议案基础信息</h4>{nodeData.normal.map((record) => renderNodeRecord(record))}</section>{nodeData.changed.length > 0 && <section className="bp-changed-data"><h4>本环节更新字段</h4>{nodeData.changed.map((record) => renderNodeRecord(record, true))}</section>}<footer><div><span>调用 Skill</span>{nodeData.skills.length ? nodeData.skills.map((skill) => <b key={skill}>{skill}</b>) : <b>本节点未调用 Skill</b>}</div><div><span>调用 MCP</span>{nodeData.mcps.length ? nodeData.mcps.map((mcp) => <b key={mcp}>{mcp}</b>) : <b>本节点未调用 MCP</b>}</div></footer></section></div>;
-  return <main className="blueprint-flow-page bp-monitor-mode">
+    const skills = [...(has("职能审核") ? ["职能预审skill"] : [])];
+    return { normal, changed, skills, mcps: [] };
+  })() : null;  const renderNodeRecord = (record: { key: string; type: string; value: string }, changed = false) => <div className={`bp-data-record ${record.type} ${changed ? "changed" : ""}`} key={record.key}><code>{record.key}</code>{record.type === "file" ? <button type="button" className="bp-data-file" onClick={() => setDocumentPreview(record.value)}><FileText size={16}/><div><b>{record.value.split(" · ")[0]}</b><small>{record.value.split(" · ")[1]}</small></div><i>↗</i></button> : <p>{record.value}</p>}</div>;
+  const nodeDataModal = selectedTraceNode && nodeData && <div className="bp-node-data-modal-backdrop" onClick={() => setSelectedTraceNode(null)}><section className={`bp-node-data-modal ${selectedTraceNode.includes("职能审核 · 生成职能审核建议") ? "bp-functional-advice-data" : ""}`} role="dialog" aria-modal="true" aria-label={`${selectedTraceNode} 节点详情`} onClick={(event) => event.stopPropagation()}><header><div><small>NODE BUSINESS DETAIL</small><h3>{selectedTraceNode}</h3><p>{selectedTraceNode.includes("职能审核 · 生成职能审核建议") ? "展示本次职能审核建议生成所依据的修改内容。" : "本节点仅展示发生变更的业务字段。"}</p></div><button type="button" onClick={() => setSelectedTraceNode(null)} aria-label="关闭详情"><X size={17}/></button></header><section><h4>{selectedTraceNode.includes("职能审核 · 生成职能审核建议") ? "基本信息" : "议案基础信息"}</h4>{nodeData.normal.map((record) => renderNodeRecord(record))}</section>{nodeData.changed.length > 0 && <section className="bp-changed-data"><h4>{selectedTraceNode.includes("职能审核 · 生成职能审核建议") ? "议案修改内容" : "本环节更新字段"}</h4>{nodeData.changed.map((record) => renderNodeRecord(record, true))}</section>}<footer><div><span>调用 Skill</span>{nodeData.skills.length ? nodeData.skills.map((skill) => <b key={skill}>{skill}</b>) : <b>本节点未调用 Skill</b>}</div><div><span>调用 MCP</span>{nodeData.mcps.length ? nodeData.mcps.map((mcp) => <b key={mcp}>{mcp}</b>) : <b>本节点未调用 MCP</b>}</div></footer></section></div>;
+  const documentPreviewModal = documentPreview && <div className="bp-doc-preview-backdrop" onClick={() => setDocumentPreview(null)}><section className="bp-doc-preview" onClick={(event) => event.stopPropagation()}><header><div><small>WORD DOCUMENT PREVIEW</small><h3>{documentPreview.split(" · ")[0]}</h3></div><button type="button" onClick={() => setDocumentPreview(null)}><X size={18}/></button></header><article><h1>关于《山东邦维信息科技有限公司部分高级管理人员任职调整》的议案</h1><p>各位委员：</p><p>根据工作需要，现提请审议山东邦维信息科技有限公司部分高级管理人员任职调整事项。</p><h2>一、任职调整事项</h2><p>聘任张磊同志为副总经理；解聘张磊同志总经理职务，并同步明确任职生效时间与交接安排。</p><h2>二、说明</h2><p>本次调整已补充任职依据、考察材料及岗位职责说明，具体内容以随附材料为准。</p><footer>ESG 战略执行委员会办公室　2026 年 09 月 01 日</footer></article></section></div>;  return <main className="blueprint-flow-page bp-monitor-mode">
     <section className="bp-monitor-toolbar"><label><Search size={17}/><input value={monitorQuery} onChange={(event) => setMonitorQuery(event.target.value)} placeholder="搜索议案名称、编号或申请人，追踪完整流程" />{monitorQuery && <button type="button" onClick={() => setMonitorQuery("")}><X size={14}/></button>}</label>{monitorMatches.length > 0 && <div className="bp-monitor-results">{monitorMatches.map((proposal) => <button type="button" key={proposal.id} onClick={() => { const state = proposalMonitorState(proposal); setTrackedProposal(proposal); setSelectedNode(digitalEmployeeNodes.find((node) => node.id === state.currentNodeId) ?? null); setMonitorQuery(""); }}><b>{proposal.title}</b><span>{proposal.id} · {proposal.applicant} · {proposal.lifecycleStatus || proposal.status}</span></button>)}</div>}{trackedProposal && <button type="button" className="bp-monitor-reset" onClick={() => { setTrackedProposal(null); setSelectedNode(null); }}>返回全局监控</button>}</section>
     <div className="blueprint-viewport" ref={viewportRef} onPointerDown={startDrag} onPointerMove={(event) => { if (drag) setPan({ x: drag.originX + event.clientX - drag.x, y: drag.originY + event.clientY - drag.y }); }} onPointerUp={() => setDrag(null)} onPointerCancel={() => setDrag(null)}>
       <div className="blueprint-canvas" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
@@ -1204,7 +1172,7 @@ function DigitalEmployeeFlow({ notice, items }: { notice: (s: string) => void; i
       </div>
       <aside className="bp-tools" aria-label="画布视图控制"><button type="button" onClick={() => zoomBy(0.08)} aria-label="放大"><ZoomIn size={16}/></button><strong>{Math.round(zoom * 100)}%</strong><button type="button" onClick={() => zoomBy(-0.08)} aria-label="缩小"><ZoomOut size={16}/></button><i/><button type="button" onClick={resetView} aria-label="复位视图"><RotateCcw size={15}/></button></aside>
     </div>
-    {selectedNode && (() => { const queue = activeMonitorItems.filter((item) => proposalMonitorState(item).currentNodeId === selectedNode.id); const tasks = digitalEmployeeSubtasks[selectedNode.id] || []; const isCurrent = trackedState?.currentNodeId === selectedNode.id; const isDone = Boolean(trackedState?.path.includes(selectedNode.id)); return <aside className="bp-task-drawer bp-monitor-drawer" aria-label={`${selectedNode.title}流程监控详情`}><header><div><small>{trackedProposal ? "PROPOSAL PROCESS RECORD" : "NODE RUNNING QUEUE"}</small><h2>{selectedNode.title}</h2><p>{trackedProposal ? `${trackedProposal.id} · ${trackedProposal.title}` : `当前节点有 ${queue.length} 条未归档议案`}</p></div><button type="button" onClick={() => setSelectedNode(null)} aria-label="关闭"><X size={23}/></button></header>{trackedProposal ? <><div className="bp-drawer-progress"><span>节点状态</span><b>{isCurrent ? "进行中" : isDone ? "已完成" : "尚未进入"}</b><i><em style={{ width: isCurrent ? "72%" : isDone ? "100%" : "0%" }} /></i></div><section className="bp-monitor-process"><div className="bp-monitor-meta"><span>进入时间<b>{trackedState?.enteredAt}</b></span><span>节点 SLA<b>{trackedState?.sla}</b></span><span>当前子任务<b>{isCurrent ? trackedState?.currentSubtask : "—"}</b></span></div>{tasks.map((task, index) => <article className={isCurrent && index === 0 ? "current" : isDone ? "done" : "future"} key={task.title}><button type="button" className="bp-subtask-data" onClick={() => setSelectedTraceNode(`${selectedNode.title} · ${task.title}`)}>数据</button><small>子任务 {String(index + 1).padStart(2, "0")}</small><b>{task.title}</b><p>{task.h5Operation ? `钉钉待办 · ${task.role} · ${isCurrent ? "待处理" : "处理记录可查看"}` : task.detail}</p>{task.h5Operation && <button type="button">查看操作演示</button>}</article>)}{trackedState?.blockReason && selectedNode.id === "05" && <div className="bp-monitor-block">阻塞原因：{trackedState.blockReason}</div>}</section></> : <section className="bp-monitor-queue">{queue.length ? queue.map((proposal) => { const state = proposalMonitorState(proposal); return <button type="button" className={state.risk} key={proposal.id} onClick={() => { setTrackedProposal(proposal); setSelectedNode(digitalEmployeeNodes.find((node) => node.id === state.currentNodeId) ?? null); }}><b>{proposal.title}</b><span>{proposal.id} · {proposal.applicant} · 停留于 {state.enteredAt}</span><em>{state.risk === "blocked" ? "阻塞" : state.risk === "warning" ? "临近 SLA" : "正常"}</em></button>; }) : <div className="bp-monitor-empty">当前节点暂无未归档议案</div>}</section>}</aside>; })()}    <div className="bp-h5-operation">
+    {selectedNode && (() => { const queue = activeMonitorItems.filter((item) => proposalMonitorState(item).currentNodeId === selectedNode.id); const tasks = digitalEmployeeSubtasks[selectedNode.id] || []; const isCurrent = trackedState?.currentNodeId === selectedNode.id; const isDone = Boolean(trackedState?.path.includes(selectedNode.id)); return <aside className="bp-task-drawer bp-monitor-drawer" aria-label={`${selectedNode.title}流程监控详情`}><header><div><small>{trackedProposal ? "PROPOSAL PROCESS RECORD" : "NODE RUNNING QUEUE"}</small><h2>{selectedNode.title}</h2><p>{trackedProposal ? `${trackedProposal.id} · ${trackedProposal.title}` : `当前节点有 ${queue.length} 条未归档议案`}</p></div><button type="button" onClick={() => setSelectedNode(null)} aria-label="关闭"><X size={23}/></button></header>{trackedProposal ? <><div className="bp-drawer-progress"><span>节点状态</span><b>{isCurrent ? "进行中" : isDone ? "已完成" : "尚未进入"}</b><i><em style={{ width: isCurrent ? "72%" : isDone ? "100%" : "0%" }} /></i></div><section className="bp-monitor-process"><div className="bp-monitor-meta"><span>进入时间<b>{trackedState?.enteredAt}</b></span><span>节点 SLA<b>{trackedState?.sla}</b></span><span>当前子任务<b>{isCurrent ? trackedState?.currentSubtask : "—"}</b></span></div>{tasks.map((task, index) => <article className={isCurrent && index === 0 ? "current" : isDone ? "done" : "future"} key={task.title}>{selectedNode.id === "07" && task.title === "生成职能审核建议" && <button type="button" className="bp-subtask-data" onClick={() => setSelectedTraceNode(`${selectedNode.title} · ${task.title}`)}>数据</button>}<small>子任务 {String(index + 1).padStart(2, "0")}</small><b>{task.title}</b><p>{task.h5Operation ? `钉钉待办 · ${task.role} · ${isCurrent ? "待处理" : "处理记录可查看"}` : task.detail}</p>{task.h5Operation && <button type="button">查看操作演示</button>}</article>)}{trackedState?.blockReason && selectedNode.id === "05" && <div className="bp-monitor-block">阻塞原因：{trackedState.blockReason}</div>}</section></> : <section className="bp-monitor-queue">{queue.length ? queue.map((proposal) => { const state = proposalMonitorState(proposal); return <button type="button" className={state.risk} key={proposal.id} onClick={() => { setTrackedProposal(proposal); setSelectedNode(digitalEmployeeNodes.find((node) => node.id === state.currentNodeId) ?? null); }}><b>{proposal.title}</b><span>{proposal.id} · {proposal.applicant} · 停留于 {state.enteredAt}</span><em>{state.risk === "blocked" ? "阻塞" : state.risk === "warning" ? "临近 SLA" : "正常"}</em></button>; }) : <div className="bp-monitor-empty">当前节点暂无未归档议案</div>}</section>}</aside>; })()}    <div className="bp-h5-operation">
       {h5Operation === "application" && <ProposalApplicationDrawer onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
       {h5Operation === "basic-review" && <ProposalReviewDrawer mode="basic" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} onReject={rejectH5Operation} />}
       {h5Operation === "basic-revision" && <ProposalReviewDrawer mode="revision" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
@@ -1225,7 +1193,7 @@ function DigitalEmployeeFlow({ notice, items }: { notice: (s: string) => void; i
       {h5Operation === "instruction-execution" && <ExecutionStatusDrawer kind="instruction" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
       {h5Operation === "execution-confirm" && <ProposalExecutionConfirmDrawer mode="execution" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
       {h5Operation === "archive-confirm" && <ProposalExecutionConfirmDrawer mode="archive" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
-    </div>    {nodeDataModal}
+    </div>    {nodeDataModal}{documentPreviewModal}
   </main>;
 }
 
