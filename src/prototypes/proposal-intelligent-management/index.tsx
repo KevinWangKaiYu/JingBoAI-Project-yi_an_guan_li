@@ -73,6 +73,7 @@ const route = defineHashPageRoute(
     { id: "task-breakdown", title: "任务拆解与分配" },
     { id: "execution-tracking", title: "议案执行追踪" },
     { id: "digital-employee-flow", title: "议案数字员工流程监控" },
+    { id: "proposal-flow-monitor", title: "议案全流程监控" },
     { id: "dingtalk-h5-scenes", title: "钉钉 H5 交互场景" },
     { id: "skills", title: "技能定义" },
     { id: "permissions", title: "权限管理" },
@@ -342,12 +343,13 @@ const menu = [
   ["task-breakdown", "任务拆解与分配", ClipboardList],
   ["execution-tracking", "议案执行追踪", ClipboardList],
   ["digital-employee-flow", "议案数字员工流程监控", LayoutList],
+  ["proposal-flow-monitor", "议案全流程监控", Grid2X2],
   ["skills", "技能定义", Sparkles],
   ["permissions", "权限管理", LockKeyhole],
 ] as const;
-const userMenu = menu.filter(([id]) => id !== "digital-employee-flow");
+const userMenu = menu.filter(([id]) => !["digital-employee-flow", "proposal-flow-monitor"].includes(id));
 const userPages = new Set(userMenu.map(([id]) => id));
-const monitorPages = new Set(["digital-employee-flow"]);
+const monitorPages = new Set(["digital-employee-flow", "proposal-flow-monitor"]);
 const dingtalkScenePages = new Set(["dingtalk-h5-scenes"]);
 const skillsSeed = [
   {
@@ -1222,6 +1224,58 @@ function DigitalEmployeeFlow({ notice }: { notice: (s: string) => void }) {
       {h5Operation === "execution-confirm" && <ProposalExecutionConfirmDrawer mode="execution" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
       {h5Operation === "archive-confirm" && <ProposalExecutionConfirmDrawer mode="archive" onClose={() => setH5Operation(null)} onSubmit={completeH5Operation} />}
     </div>    {nodeDataModal}
+  </main>;
+}
+
+type ProposalMonitorState = { currentNodeId: string; currentSubtask: string; risk: "normal" | "warning" | "blocked"; path: string[]; enteredAt: string; sla: string; blockReason?: string };
+const proposalMonitorPath = ["01", "04", "06", "07", "08", "12", "13", "14", "15", "16", "17", "18", "19", "20", "22", "23", "24", "25", "26"];
+function proposalMonitorState(proposal: Proposal): ProposalMonitorState {
+  const status = [proposal.lifecycleStatus, proposal.status, proposal.organizeStatus, proposal.deliberationStatus, proposal.executionStatus].filter(Boolean).join(" · ");
+  const has = (...words: string[]) => words.some((word) => status.includes(word));
+  const sourceNode = proposal.source.includes("门户") ? "02" : proposal.source.includes("钉钉") ? "03" : "01";
+  let currentNodeId = sourceNode;
+  if (has("已归档")) currentNodeId = "26";
+  else if (has("归档")) currentNodeId = "25";
+  else if (has("执行", "督办")) currentNodeId = has("分析") ? "24" : "23";
+  else if (has("决议", "审批", "备案", "传递")) currentNodeId = has("审批") ? "19" : has("备案") ? "20" : "22";
+  else if (has("公告")) currentNodeId = "15";
+  else if (has("审议完成", "投票", "会议")) currentNodeId = has("审议完成") ? "15" : "14";
+  else if (has("审核通过")) currentNodeId = "12";
+  else if (has("战执委")) currentNodeId = "08";
+  else if (has("职能", "预审")) currentNodeId = "07";
+  else if (has("驳回", "修改后")) currentNodeId = "05";
+  else if (has("审核")) currentNodeId = "06";
+  else if (has("整理", "待整理")) currentNodeId = sourceNode;
+  const currentIndex = Math.max(proposalMonitorPath.indexOf(currentNodeId), proposalMonitorPath.indexOf(sourceNode));
+  const path = proposalMonitorPath.slice(0, currentIndex + 1);
+  const node = digitalEmployeeNodes.find((item) => item.id === currentNodeId);
+  const risk = has("驳回") ? "blocked" : (Number(proposal.id.slice(-1)) % 4 === 0 ? "warning" : "normal");
+  return { currentNodeId, currentSubtask: digitalEmployeeSubtasks[currentNodeId]?.[0]?.title || node?.title || "流程处理中", risk, path, enteredAt: proposal.changeTime || proposal.time, sla: currentNodeId === "01" || currentNodeId === "02" || currentNodeId === "03" ? "4 小时" : ["23", "24", "25", "26"].includes(currentNodeId) ? "72 小时" : "24 小时", blockReason: risk === "blocked" ? proposal.reason || "等待申请人补充并重新提交材料" : undefined };
+}
+function ProposalFlowMonitor({ items }: { items: Proposal[] }) {
+  const [query, setQuery] = useState("");
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const activeItems = items.filter((item) => item.executionStatus !== "已归档" && item.lifecycleStatus !== "已归档");
+  const matches = query.trim() ? items.filter((item) => `${item.id} ${item.title} ${item.applicant}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6) : [];
+  const selectedState = selectedProposal ? proposalMonitorState(selectedProposal) : null;
+  const focusedNodeId = selectedNodeId || selectedState?.currentNodeId || null;
+  const nodeQueue = focusedNodeId ? activeItems.filter((item) => proposalMonitorState(item).currentNodeId === focusedNodeId).sort((a, b) => Number(proposalMonitorState(b).risk !== "normal") - Number(proposalMonitorState(a).risk !== "normal")) : [];
+  const selectProposal = (proposal: Proposal) => { const state = proposalMonitorState(proposal); setSelectedProposal(proposal); setSelectedNodeId(state.currentNodeId); setQuery(""); };
+  const clearFocus = () => { setSelectedProposal(null); setSelectedNodeId(null); setQuery(""); };
+  const nodeStatus = (nodeId: string) => {
+    if (!selectedState) { const queue = activeItems.filter((item) => proposalMonitorState(item).currentNodeId === nodeId); return { kind: "overview", count: queue.length, risk: queue.filter((item) => proposalMonitorState(item).risk !== "normal").length }; }
+    if (nodeId === selectedState.currentNodeId) return { kind: "current", count: 0, risk: 0 };
+    if (selectedState.path.includes(nodeId)) return { kind: "done", count: 0, risk: 0 };
+    return { kind: "future", count: 0, risk: 0 };
+  };
+  const selectedNode = digitalEmployeeNodes.find((node) => node.id === focusedNodeId);
+  const selectedTasks = selectedNode ? digitalEmployeeSubtasks[selectedNode.id] || [] : [];
+  return <main className="proposal-monitor-page">
+    <header className="pfm-header"><div><small>PROPOSAL FLOW OBSERVABILITY</small><h1>{selectedProposal ? selectedProposal.title : "议案全流程监控"}</h1><p>{selectedProposal ? `${selectedProposal.id} · ${selectedProposal.applicant} · 当前追踪其实际执行路径` : "统一观察未归档议案的流转位置、超时风险与人工待办。"}</p></div>{selectedProposal && <button type="button" className="pfm-reset" onClick={clearFocus}>返回全局监控</button>}</header>
+    <section className="pfm-toolbar"><label className="pfm-search"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索议案名称、编号或申请人，追踪完整执行路径" />{query && <button type="button" onClick={() => setQuery("")}><X size={15}/></button>}</label>{matches.length > 0 && <div className="pfm-results">{matches.map((proposal) => <button type="button" key={proposal.id} onClick={() => selectProposal(proposal)}><b>{proposal.title}</b><span>{proposal.id} · {proposal.applicant} · {proposal.lifecycleStatus || proposal.status}</span></button>)}</div>}<div className="pfm-kpis"><span><b>{activeItems.length}</b>在办议案</span><span className="risk"><b>{activeItems.filter((item) => proposalMonitorState(item).risk !== "normal").length}</b>风险节点</span><span><b>{items.filter((item) => item.executionStatus === "已归档" || item.lifecycleStatus === "已归档").length}</b>已归档</span></div></section>
+    <section className={`pfm-workspace ${selectedProposal ? "tracking" : "overview"}`}><div className="pfm-flow">{digitalEmployeeStages.map((stage, stageIndex) => <section className="pfm-stage" key={stage.title}><header><small>0{stageIndex + 1}</small><b>{stage.title}</b><span>{stage.agentTitle}</span></header><div>{digitalEmployeeNodes.filter((node) => node.lane === stageIndex).map((node) => { const state = nodeStatus(node.id); const isReturned = selectedProposal && selectedState?.risk === "blocked" && node.id === "05"; return <button type="button" key={node.id} onClick={() => setSelectedNodeId(node.id)} className={`pfm-node ${node.tone} ${state.kind} ${isReturned ? "returned" : ""} ${focusedNodeId === node.id ? "selected" : ""}`}><small>二级节点 {node.id}</small><b>{node.title}</b>{state.kind === "overview" ? <footer><span>在办 {state.count}</span>{state.risk > 0 && <em>风险 {state.risk}</em>}</footer> : <footer><span>{state.kind === "done" ? "已完成" : state.kind === "current" ? "当前节点" : "待进入"}</span></footer>}</button>; })}</div></section>)}</div>
+      <aside className="pfm-detail">{selectedNode ? <><header><small>{selectedProposal ? "PROPOSAL PROCESS RECORD" : "NODE RUNNING QUEUE"}</small><h2>{selectedNode.title}</h2><p>{selectedProposal ? `当前查看 ${selectedProposal.id} 在此节点的过程数据。` : `当前节点有 ${nodeQueue.length} 条未归档议案。`}</p></header>{selectedProposal ? <section className="pfm-process"><div className="pfm-process-meta"><span>当前状态 <b>{selectedNodeId === selectedState?.currentNodeId ? "进行中" : selectedState?.path.includes(selectedNodeId || "") ? "已完成" : "尚未进入"}</b></span><span>进入时间 <b>{selectedState?.enteredAt}</b></span><span>节点 SLA <b>{selectedState?.sla}</b></span></div>{selectedTasks.map((task, index) => <article key={task.title} className={selectedNodeId === selectedState?.currentNodeId && index === 0 ? "current" : selectedState?.path.includes(selectedNodeId || "") ? "done" : "future"}><small>子任务 {String(index + 1).padStart(2, "0")}</small><b>{task.title}</b><p>{task.h5Operation ? `钉钉待办 · ${task.role} · ${selectedNodeId === selectedState?.currentNodeId ? "待处理" : "处理记录可查看"}` : task.detail}</p>{task.h5Operation && <button type="button">查看操作演示</button>}</article>)}{selectedState?.blockReason && selectedNodeId === "05" && <div className="pfm-block">阻塞原因：{selectedState.blockReason}</div>}</section> : <section className="pfm-queue">{nodeQueue.length ? nodeQueue.map((proposal) => { const state = proposalMonitorState(proposal); return <button type="button" key={proposal.id} onClick={() => selectProposal(proposal)} className={state.risk}><b>{proposal.title}</b><span>{proposal.id} · {proposal.applicant} · 已停留 {state.enteredAt}</span><em>{state.risk === "blocked" ? "阻塞" : state.risk === "warning" ? "临近 SLA" : "正常"}</em></button>; }) : <div className="pfm-empty">当前节点暂无未归档议案</div>}</section>}</> : <div className="pfm-empty large">点击流程中的任一二级节点，查看该节点的在办议案与过程数据。</div>}</aside></section>
   </main>;
 }
 const dingtalkScenes = [
@@ -3911,6 +3965,7 @@ function App() {
   else if (activePage === "task-breakdown") content = <TaskBreakdownPage items={items} onDetail={setDetail} onFlow={(kind, p) => setTaskFlow({ kind, p })} onProgress={setTaskProgress} />;
   else if (activePage === "execution-tracking") content = <ExecutionTracking items={items} onOpen={setExecutionDetail} onReview={setExecutionReview} onArchive={setExecutionArchive} />;
   else if (activePage === "digital-employee-flow") content = <DigitalEmployeeFlow notice={notice} />;
+  else if (activePage === "proposal-flow-monitor") content = <ProposalFlowMonitor items={items} />;
   else if (activePage === "dingtalk-h5-scenes") content = <DingtalkH5Scenes notice={notice} />;
   else if (activePage === "skills")
     content = <Skills skills={skills} setSkills={setSkills} notice={notice} />;
