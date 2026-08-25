@@ -967,13 +967,20 @@ function DigitalEmployeeFlow({ notice, items }: { notice: (s: string) => void; i
   const [documentPreview, setDocumentPreview] = useState<string | null>(null);
   const [monitorQuery, setMonitorQuery] = useState("");
   const [trackedProposal, setTrackedProposal] = useState<Proposal | null>(null);
-  const activeMonitorItems = items.filter((item) => item.executionStatus !== "已归档" && item.lifecycleStatus !== "已归档");
-  const monitorMatches = monitorQuery.trim() ? items.filter((item) => `${item.id} ${item.title} ${item.applicant}`.toLowerCase().includes(monitorQuery.trim().toLowerCase())).slice(0, 6) : [];
-  const trackedState = trackedProposal ? proposalMonitorState(trackedProposal) : null;
+  const activeMonitorItems = useMemo(() => items.filter((item) => item.executionStatus !== "已归档" && item.lifecycleStatus !== "已归档"), [items]);
+  const monitorStateById = useMemo(() => new Map(items.map((item) => [item.id, proposalMonitorState(item)])), [items]);
+  const monitorMatches = useMemo(() => { const query = monitorQuery.trim().toLowerCase(); return query ? items.filter((item) => `${item.id} ${item.title} ${item.applicant}`.toLowerCase().includes(query)).slice(0, 6) : []; }, [items, monitorQuery]);
+  const trackedState = useMemo(() => trackedProposal ? monitorStateById.get(trackedProposal.id) ?? proposalMonitorState(trackedProposal) : null, [monitorStateById, trackedProposal]);
+  const monitorOverviewMeta = useMemo(() => {
+    const meta = new Map<string, { count: number; risk: number }>();
+    digitalEmployeeNodes.forEach((node) => meta.set(node.id, { count: 0, risk: 0 }));
+    activeMonitorItems.forEach((item) => { const state = monitorStateById.get(item.id) ?? proposalMonitorState(item); const itemMeta = meta.get(state.currentNodeId); if (itemMeta) { itemMeta.count += 1; if (state.risk !== "normal") itemMeta.risk += 1; } });
+    return meta;
+  }, [activeMonitorItems, monitorStateById]);
   const nodeMonitorMeta = (nodeId: string) => {
     if (trackedState) return { count: 0, risk: 0, kind: nodeId === trackedState.currentNodeId ? "current" : trackedState.path.includes(nodeId) ? "done" : "future" };
-    const queue = activeMonitorItems.filter((item) => proposalMonitorState(item).currentNodeId === nodeId);
-    return { count: queue.length, risk: queue.filter((item) => proposalMonitorState(item).risk !== "normal").length, kind: "overview" };
+    const meta = monitorOverviewMeta.get(nodeId) ?? { count: 0, risk: 0 };
+    return { ...meta, kind: "overview" };
   };
   const nodeElementRefs = useRef(new Map<string, HTMLButtonElement>());
   const subtaskElementRefs = useRef(new Map<string, HTMLButtonElement>());
